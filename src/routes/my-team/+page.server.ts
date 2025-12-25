@@ -2,7 +2,7 @@ import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
     // Mock data for static build - database not available
-    const teams = [];
+    const teams: any[] = [];
     const user = {
         id: 'demo-user',
         username: 'Demo User',
