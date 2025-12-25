@@ -39,7 +39,7 @@ class LichessApiService {
     /**
      * Get top classical chess players from Lichess
      */
-    async getTopPlayers(count: number = 50): Promise<Player[]> {
+    async getTopPlayers(count: number = 500): Promise<Player[]> {
         // Check cache first
         if (this.cache && Date.now() - this.cache.timestamp < CACHE_DURATION) {
             return this.cache.players.slice(0, count);
@@ -80,6 +80,7 @@ class LichessApiService {
     private transformPlayers(lichessPlayers: LichessPlayer[]): Player[] {
         return lichessPlayers.map((player, index) => {
             const rating = player.perfs?.classical?.rating || 2500;
+            const position = index + 1;
             const fullName = player.profile?.firstName && player.profile?.lastName
                 ? `${player.profile.firstName} ${player.profile.lastName}`
                 : player.username;
@@ -89,8 +90,8 @@ class LichessApiService {
                 username: player.username,
                 name: fullName,
                 rating,
-                price: this.calculatePrice(rating),
-                position: index + 1,
+                price: this.calculatePrice(rating, position),
+                position,
                 photoUrl: `https://lichess1.org/assets/logo/lichess-pad-${player.username}.png`,
                 country: player.profile?.country
             };
@@ -98,13 +99,36 @@ class LichessApiService {
     }
 
     /**
-     * Calculate player price based on rating
-     * Formula: (rating - 2000) * 100,000
-     * Example: 2830 rating = 83M
+     * Calculate player price based on rating and ranking position
+     * Similar to LaLiga Fantasy pricing (1M - 25M range)
+     * Formula considers both absolute rating and relative ranking
      */
-    private calculatePrice(rating: number): number {
-        const basePrice = Math.max(0, rating - 2000) * 100000;
-        return Math.round(basePrice / 1000000) * 1000000; // Round to nearest million
+    private calculatePrice(rating: number, position: number): number {
+        // Base price by position (progressive tiers)
+        let basePrice: number;
+
+        if (position <= 10) {
+            // Top 10: 15-25M
+            basePrice = 25000000 - (position - 1) * 1000000;
+        } else if (position <= 50) {
+            // Top 11-50: 8-15M  
+            basePrice = 15000000 - ((position - 10) / 40) * 7000000;
+        } else if (position <= 100) {
+            // Top 51-100: 5-8M
+            basePrice = 8000000 - ((position - 50) / 50) * 3000000;
+        } else if (position <= 200) {
+            // Top 101-200: 3-5M
+            basePrice = 5000000 - ((position - 100) / 100) * 2000000;
+        } else {
+            // Top 201-500: 1-3M
+            basePrice = 3000000 - ((position - 200) / 300) * 2000000;
+        }
+
+        // Ensure minimum 1M
+        basePrice = Math.max(1000000, basePrice);
+
+        // Round to nearest 100k for cleaner prices
+        return Math.round(basePrice / 100000) * 100000;
     }
 
     /**
@@ -112,21 +136,21 @@ class LichessApiService {
      */
     private getFallbackPlayers(): Player[] {
         return [
-            { id: 'magnuscarlsen', username: 'DrNykterstein', name: 'Magnus Carlsen', rating: 2830, price: 83000000, position: 1, photoUrl: '', country: 'NO' },
-            { id: 'fabianocaruana', username: 'FabianoCaruana', name: 'Fabiano Caruana', rating: 2805, price: 80000000, position: 2, photoUrl: '', country: 'US' },
-            { id: 'dingliren', username: 'DingLiren', name: 'Ding Liren', rating: 2780, price: 78000000, position: 3, photoUrl: '', country: 'CN' },
-            { id: 'iannepo', username: 'lachesisQ', name: 'Ian Nepomniachtchi', rating: 2770, price: 77000000, position: 4, photoUrl: '', country: 'RU' },
-            { id: 'hikarunakamura', username: 'Hikaru', name: 'Hikaru Nakamura', rating: 2765, price: 76000000, position: 5, photoUrl: '', country: 'US' },
-            { id: 'alirezafirouzja', username: 'Firouzja2003', name: 'Alireza Firouzja', rating: 2760, price: 76000000, position: 6, photoUrl: '', country: 'FR' },
-            { id: 'wesleyso', username: 'WesleySo', name: 'Wesley So', rating: 2755, price: 75000000, position: 7, photoUrl: '', country: 'US' },
-            { id: 'levonaronian', username: 'Levon', name: 'Levon Aronian', rating: 2750, price: 75000000, position: 8, photoUrl: '', country: 'US' },
-            { id: 'mvl', username: 'MVL', name: 'Maxime Vachier-Lagrave', rating: 2745, price: 74000000, position: 9, photoUrl: '', country: 'FR' },
-            { id: 'anishgiri', username: 'AnishGiri', name: 'Anish Giri', rating: 2740, price: 74000000, position: 10, photoUrl: '', country: 'NL' },
-            { id: 'vishy', username: 'Vishy', name: 'Viswanathan Anand', rating: 2735, price: 73000000, position: 11, photoUrl: '', country: 'IN' },
-            { id: 'shakhriyar', username: 'Shakhriyar', name: 'Shakhriyar Mamedyarov', rating: 2730, price: 73000000, position: 12, photoUrl: '', country: 'AZ' },
-            { id: 'teimour', username: 'Teimour', name: 'Teimour Radjabov', rating: 2725, price: 72000000, position: 13, photoUrl: '', country: 'AZ' },
-            { id: 'grischuk', username: 'Grischuk', name: 'Alexander Grischuk', rating: 2720, price: 72000000, position: 14, photoUrl: '', country: 'RU' },
-            { id: 'rapport', username: 'RichardRapport', name: 'Richard Rapport', rating: 2715, price: 71000000, position: 15, photoUrl: '', country: 'RO' }
+            { id: 'magnuscarlsen', username: 'DrNykterstein', name: 'Magnus Carlsen', rating: 2830, price: 25000000, position: 1, photoUrl: '', country: 'NO' },
+            { id: 'fabianocaruana', username: 'FabianoCaruana', name: 'Fabiano Caruana', rating: 2805, price: 24000000, position: 2, photoUrl: '', country: 'US' },
+            { id: 'dingliren', username: 'DingLiren', name: 'Ding Liren', rating: 2780, price: 23000000, position: 3, photoUrl: '', country: 'CN' },
+            { id: 'iannepo', username: 'lachesisQ', name: 'Ian Nepomniachtchi', rating: 2770, price: 22000000, position: 4, photoUrl: '', country: 'RU' },
+            { id: 'hikarunakamura', username: 'Hikaru', name: 'Hikaru Nakamura', rating: 2765, price: 21000000, position: 5, photoUrl: '', country: 'US' },
+            { id: 'alirezafirouzja', username: 'Firouzja2003', name: 'Alireza Firouzja', rating: 2760, price: 20000000, position: 6, photoUrl: '', country: 'FR' },
+            { id: 'wesleyso', username: 'WesleySo', name: 'Wesley So', rating: 2755, price: 19000000, position: 7, photoUrl: '', country: 'US' },
+            { id: 'levonaronian', username: 'Levon', name: 'Levon Aronian', rating: 2750, price: 18000000, position: 8, photoUrl: '', country: 'US' },
+            { id: 'mvl', username: 'MVL', name: 'Maxime Vachier-Lagrave', rating: 2745, price: 17000000, position: 9, photoUrl: '', country: 'FR' },
+            { id: 'anishgiri', username: 'AnishGiri', name: 'Anish Giri', rating: 2740, price: 16000000, position: 10, photoUrl: '', country: 'NL' },
+            { id: 'vishy', username: 'Vishy', name: 'Viswanathan Anand', rating: 2735, price: 14000000, position: 11, photoUrl: '', country: 'IN' },
+            { id: 'shakhriyar', username: 'Shakhriyar', name: 'Shakhriyar Mamedyarov', rating: 2730, price: 13000000, position: 12, photoUrl: '', country: 'AZ' },
+            { id: 'teimour', username: 'Teimour', name: 'Teimour Radjabov', rating: 2725, price: 12000000, position: 13, photoUrl: '', country: 'AZ' },
+            { id: 'grischuk', username: 'Grischuk', name: 'Alexander Grischuk', rating: 2720, price: 11000000, position: 14, photoUrl: '', country: 'RU' },
+            { id: 'rapport', username: 'RichardRapport', name: 'Richard Rapport', rating: 2715, price: 10000000, position: 15, photoUrl: '', country: 'RO' }
         ];
     }
 
