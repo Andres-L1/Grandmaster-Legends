@@ -1,20 +1,36 @@
 <script lang="ts">
-    import type { PageData } from "./$types";
+    import { user } from "$lib/stores/user";
 
-    let { data }: { data: PageData } = $props();
+    // Mock leaderboard data - can be expanded with localStorage later
+    const leaderboard = [
+        { rank: 1, username: "ChessMaster Pro", points: 2500, badge: "👑" },
+        { rank: 2, username: "TacticGuru", points: 2200, badge: "🥈" },
+        { rank: 3, username: "EndgameKing", points: 2100, badge: "🥉" },
+        { rank: 4, username: "Opening_Expert", points: 1900 },
+        { rank: 5, username: "Blitz_Wizard", points: 1850 },
+        { rank: 6, username: "Positional_Player", points: 1700 },
+        { rank: 7, username: "AttackSpecialist", points: 1650 },
+        { rank: 8, username: "DefenseMaestro", points: 1600 },
+        { rank: 9, username: "TimeManager", points: 1550 },
+        { rank: 10, username: "Combo_Hunter", points: 1500 },
+    ];
 
-    // Mock current user - should come from session
-    const currentUserId = "user-1";
+    $: currentUserRank =
+        leaderboard.findIndex((p) => p.points < $user.totalPoints) + 1 ||
+        leaderboard.length + 1;
 
-    function isCurrentUser(userId: string): boolean {
-        return userId === currentUserId;
+    function getRankColor(rank: number): string {
+        if (rank === 1) return "text-yellow-400";
+        if (rank === 2) return "text-gray-300";
+        if (rank === 3) return "text-orange-400";
+        return "text-white";
     }
 
-    function getRankMedal(rank: number): string {
-        if (rank === 1) return "🥇";
-        if (rank === 2) return "🥈";
-        if (rank === 3) return "🥉";
-        return `#${rank}`;
+    function getRankBg(rank: number): string {
+        if (rank === 1) return "bg-yellow-500/20 border-yellow-500/50";
+        if (rank === 2) return "bg-gray-500/20 border-gray-500/50";
+        if (rank === 3) return "bg-orange-500/20 border-orange-500/50";
+        return "bg-white/5 border-white/10";
     }
 </script>
 
@@ -24,105 +40,164 @@
 
 <div class="space-y-6">
     <!-- Header -->
-    <div class="text-center">
-        <h1 class="text-4xl font-bold text-white mb-2">
-            🏆 Clasificación Global
-        </h1>
-        <p class="text-gray-400">Compite con jugadores de todo el mundo</p>
+    <div
+        class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+    >
+        <div>
+            <h1 class="text-3xl sm:text-4xl font-bold text-white">
+                Ligas Globales
+            </h1>
+            <p class="text-gray-400 mt-2">
+                Compite con jugadores de todo el mundo
+            </p>
+        </div>
     </div>
 
-    <!-- Stats Overview -->
-    <div class="grid md:grid-cols-3 gap-4">
+    <!-- Current User Stats -->
+    <div
+        class="bg-gradient-to-r from-purple-900/40 to-pink-900/40 backdrop-blur-md border border-white/10 rounded-xl p-6"
+    >
         <div
-            class="bg-gradient-to-br from-yellow-900/40 to-yellow-700/40 backdrop-blur-md rounded-xl p-6 border border-yellow-500/30"
+            class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
         >
-            <div class="text-yellow-400 mb-2 text-4xl">🥇</div>
-            <div class="text-sm text-gray-300">Total Jugadores</div>
-            <div class="text-3xl font-bold text-white">
-                {data.totalUsers.toLocaleString()}
+            <div>
+                <h2 class="text-2xl font-bold text-white mb-2">
+                    {$user.username}
+                </h2>
+                <div class="flex flex-wrap gap-4 text-sm">
+                    <div>
+                        <span class="text-gray-400">Puesto:</span>
+                        <span class="ml-2 text-purple-400 font-semibold"
+                            >#{currentUserRank}</span
+                        >
+                    </div>
+                    <div>
+                        <span class="text-gray-400">Puntos:</span>
+                        <span class="ml-2 text-white font-semibold"
+                            >{$user.totalPoints}</span
+                        >
+                    </div>
+                    <div>
+                        <span class="text-gray-400">Presupuesto:</span>
+                        <span class="ml-2 text-yellow-400 font-semibold"
+                            >{($user.budget / 1000000).toFixed(1)}M</span
+                        >
+                    </div>
+                </div>
             </div>
-        </div>
-        <div
-            class="bg-gradient-to-br from-purple-900/40 to-purple-700/40 backdrop-blur-md rounded-xl p-6 border border-purple-500/30"
-        >
-            <div class="text-purple-400 mb-2 text-4xl">⚔️</div>
-            <div class="text-sm text-gray-300">Competidores Activos</div>
-            <div class="text-3xl font-bold text-white">{data.totalUsers}</div>
-        </div>
-        <div
-            class="bg-gradient-to-br from-pink-900/40 to-pink-700/40 backdrop-blur-md rounded-xl p-6 border border-pink-500/30"
-        >
-            <div class="text-pink-400 mb-2 text-4xl">👑</div>
-            <div class="text-sm text-gray-300">Tu Ranking</div>
-            <div class="text-3xl font-bold text-white">#???</div>
+            {#if currentUserRank <= 3}
+                <div class="text-4xl">
+                    {currentUserRank === 1
+                        ? "👑"
+                        : currentUserRank === 2
+                          ? "🥈"
+                          : "🥉"}
+                </div>
+            {/if}
         </div>
     </div>
 
     <!-- Leaderboard -->
     <div
-        class="bg-white/5 backdrop-blur-md rounded-xl border border-white/10 overflow-hidden"
+        class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden"
     >
-        <div class="overflow-x-auto">
+        <div class="p-6 border-b border-white/10">
+            <h2 class="text-2xl font-bold text-white">Top 10 Global</h2>
+        </div>
+
+        <!-- Mobile View -->
+        <div class="md:hidden divide-y divide-white/5">
+            {#each leaderboard as player (player.rank)}
+                <div
+                    class="p-4 flex items-center gap-4 {getRankBg(player.rank)}"
+                >
+                    <div
+                        class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center"
+                    >
+                        {#if player.badge}
+                            <span class="text-2xl">{player.badge}</span>
+                        {:else}
+                            <span class="text-white font-bold"
+                                >#{player.rank}</span
+                            >
+                        {/if}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3
+                            class="font-semibold {getRankColor(
+                                player.rank,
+                            )} truncate"
+                        >
+                            {player.username}
+                        </h3>
+                        <p class="text-gray-400 text-sm">
+                            {player.points} puntos
+                        </p>
+                    </div>
+                </div>
+            {/each}
+        </div>
+
+        <!-- Desktop View -->
+        <div class="hidden md:block">
             <table class="w-full">
-                <thead>
-                    <tr class="border-b border-white/10 bg-white/5">
-                        <th class="text-left p-4 text-gray-300 font-semibold"
-                            >Rank</th
+                <thead class="bg-white/5">
+                    <tr>
+                        <th
+                            class="px-6 py-4 text-left text-sm font-semibold text-gray-300"
+                            >Puesto</th
                         >
-                        <th class="text-left p-4 text-gray-300 font-semibold"
-                            >Usuario</th
+                        <th
+                            class="px-6 py-4 text-left text-sm font-semibold text-gray-300"
+                            >Jugador</th
                         >
-                        <th class="text-right p-4 text-gray-300 font-semibold"
-                            >Puntos Totales</th
+                        <th
+                            class="px-6 py-4 text-right text-sm font-semibold text-gray-300"
+                            >Puntos</th
                         >
                     </tr>
                 </thead>
-                <tbody>
-                    {#each data.users as user, index}
-                        {@const rank = (data.currentPage - 1) * 20 + index + 1}
+                <tbody class="divide-y divide-white/5">
+                    {#each leaderboard as player (player.rank)}
                         <tr
-                            class="border-b border-white/5 hover:bg-white/5 transition {isCurrentUser(
-                                user.id,
-                            )
-                                ? 'bg-purple-900/30 border-purple-500/50'
-                                : ''}"
+                            class="hover:bg-white/5 transition {getRankBg(
+                                player.rank,
+                            )}"
                         >
-                            <td class="p-4">
-                                <div
-                                    class="text-2xl font-bold {rank <= 3
-                                        ? ''
-                                        : 'text-gray-400'}"
-                                >
-                                    {getRankMedal(rank)}
-                                </div>
-                            </td>
-                            <td class="p-4">
-                                <div class="flex items-center space-x-3">
-                                    <div
-                                        class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center font-bold text-white"
-                                    >
-                                        {user.username.charAt(0).toUpperCase()}
-                                    </div>
-                                    <div>
-                                        <div
-                                            class="text-white font-semibold flex items-center gap-2"
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    {#if player.badge}
+                                        <span class="text-2xl"
+                                            >{player.badge}</span
                                         >
-                                            {user.username}
-                                            {#if isCurrentUser(user.id)}
-                                                <span
-                                                    class="bg-purple-600 text-white text-xs px-2 py-1 rounded-full"
-                                                >
-                                                    TÚ
-                                                </span>
-                                            {/if}
-                                        </div>
-                                    </div>
+                                    {:else}
+                                        <span class="text-gray-400 font-medium"
+                                            >#{player.rank}</span
+                                        >
+                                    {/if}
                                 </div>
                             </td>
-                            <td class="p-4 text-right">
-                                <div class="text-2xl font-bold text-green-400">
-                                    {user.totalPoints.toLocaleString()}
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-xl"
+                                    >
+                                        👤
+                                    </div>
+                                    <span
+                                        class="font-medium {getRankColor(
+                                            player.rank,
+                                        )}">{player.username}</span
+                                    >
                                 </div>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <span class="font-semibold text-white"
+                                    >{player.points.toLocaleString()}</span
+                                >
+                                <span class="text-gray-400 text-sm ml-1"
+                                    >pts</span
+                                >
                             </td>
                         </tr>
                     {/each}
@@ -131,45 +206,19 @@
         </div>
     </div>
 
-    <!-- Pagination -->
-    {#if data.totalPages > 1}
-        <div class="flex justify-center gap-2">
-            {#if data.currentPage > 1}
-                <a
-                    href="/leagues?page={data.currentPage - 1}"
-                    class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition"
-                >
-                    ← Anterior
-                </a>
-            {/if}
-
-            <div class="bg-white/5 px-4 py-2 rounded-lg text-white">
-                Página {data.currentPage} de {data.totalPages}
-            </div>
-
-            {#if data.currentPage < data.totalPages}
-                <a
-                    href="/leagues?page={data.currentPage + 1}"
-                    class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition"
-                >
-                    Siguiente →
-                </a>
-            {/if}
-        </div>
-    {/if}
-
-    <!-- Create Private League -->
+    <!-- Info Card -->
     <div
-        class="bg-gradient-to-r from-purple-900/40 to-pink-900/40 backdrop-blur-md rounded-xl p-8 border border-white/10 text-center"
+        class="bg-gradient-to-r from-purple-900/20 to-pink-900/20 border border-purple-500/30 rounded-xl p-6"
     >
-        <h3 class="text-2xl font-bold text-white mb-3">🔒 Ligas Privadas</h3>
-        <p class="text-gray-300 mb-6">
-            Crea una liga privada y compite con tus amigos
-        </p>
-        <button
-            class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-3 rounded-lg font-semibold transition transform hover:scale-105"
-        >
-            Crear Liga Privada
-        </button>
+        <h3 class="text-lg font-semibold text-white mb-2">
+            💡 ¿Cómo ganar puntos?
+        </h3>
+        <ul class="space-y-2 text-gray-300 text-sm">
+            <li>• Tus jugadores ganan puntos basados en sus partidas reales</li>
+            <li>• El capitán (⭐) gana puntos dobles</li>
+            <li>• Victoria: +10 pts | Tablas: +3 pts | Derrota: -2 pts</li>
+            <li>• Bonus por ganar con negras: +2 pts</li>
+            <li>• Racha de 3+ victorias: +5 pts</li>
+        </ul>
     </div>
 </div>

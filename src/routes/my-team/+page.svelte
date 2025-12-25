@@ -1,29 +1,54 @@
 <script lang="ts">
-    import type { PageData } from "./$types";
+    import { ownedPlayers, ownedPlayerIds } from "$lib/stores/players";
+    import { currentTeam, captain } from "$lib/stores/teams";
+    import { user } from "$lib/stores/user";
+    import { AVAILABLE_PLAYERS } from "$lib/stores/localStorage";
+    import type { Player } from "$lib/stores/localStorage";
 
-    let { data }: { data: PageData } = $props();
-    let selectedTeamIndex = $state(0);
+    let message: { text: string; type: "success" | "error" } | null = null;
 
-    const selectedTeam = $derived(data.teams[selectedTeamIndex]);
+    $: teamPlayers = AVAILABLE_PLAYERS.filter((p) =>
+        $currentTeam.includes(p.id),
+    );
+    $: rosterPlayers = $ownedPlayers.filter(
+        (p) => !$currentTeam.includes(p.id),
+    );
 
-    function formatPrice(price: number): string {
-        return (price / 1000000).toFixed(1) + "M";
+    function addToTeam(playerId: string) {
+        const result = currentTeam.addToTeam(playerId);
+        showMessage(result.message, result.success ? "success" : "error");
     }
 
-    async function setCaptain(playerId: string) {
-        // TODO: Implement API call
-        alert(`Setting captain to player ${playerId}... (implementar API)`);
+    function removeFromTeam(playerId: string) {
+        currentTeam.removeFromTeam(playerId);
+        showMessage("Jugador eliminado del equipo", "success");
     }
 
-    async function sellPlayer(playerId: string, playerName: string) {
+    function sellPlayer(player: Player) {
         if (
             confirm(
-                `¿Seguro que quieres vender a ${playerName}? Recuperarás el 80% del precio.`,
+                `¿Vender a ${player.name}? Recibirás ${formatPrice(player.price * 0.8)}`,
             )
         ) {
-            // TODO: Implement API call
-            alert(`Vendiendo a ${playerName}... (implementar API)`);
+            const result = ownedPlayerIds.sellPlayer(player.id);
+            showMessage(result.message, result.success ? "success" : "error");
         }
+    }
+
+    function setCaptainPlayer(playerId: string) {
+        const result = captain.setCaptain(
+            $captain === playerId ? null : playerId,
+        );
+        showMessage(result.message, result.success ? "success" : "error");
+    }
+
+    function showMessage(text: string, type: "success" | "error") {
+        message = { text, type };
+        setTimeout(() => (message = null), 3000);
+    }
+
+    function formatPrice(price: number): string {
+        return `${(price / 1000000).toFixed(1)}M`;
     }
 </script>
 
@@ -33,185 +58,170 @@
 
 <div class="space-y-6">
     <!-- Header -->
-    <div class="flex justify-between items-center">
+    <div
+        class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+    >
         <div>
-            <h1 class="text-4xl font-bold text-white mb-2">Mi Equipo</h1>
-            <p class="text-gray-400">
-                Gestiona tus jugadores y selecciona tu capitán
+            <h1 class="text-3xl sm:text-4xl font-bold text-white">Mi Equipo</h1>
+            <p class="text-gray-400 mt-2">
+                Puntos totales: <span class="text-purple-400 font-semibold"
+                    >{$user.totalPoints}</span
+                >
             </p>
-        </div>
-        <div
-            class="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-4 rounded-xl"
-        >
-            <div class="text-sm text-white/80">Puntos Totales</div>
-            <div class="text-3xl font-bold text-white">
-                {data.user?.totalPoints || 0}
-            </div>
         </div>
     </div>
 
-    <!-- Tournament Selector -->
-    {#if data.teams.length > 0}
-        <div class="flex gap-4 overflow-x-auto pb-2">
-            {#each data.teams as team, index}
-                <button
-                    onclick={() => (selectedTeamIndex = index)}
-                    class="px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition {selectedTeamIndex ===
-                    index
-                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
-                        : 'bg-white/10 text-gray-300 hover:bg-white/20'}"
-                >
-                    {team.tournament.name}
-                </button>
-            {/each}
+    <!-- Message -->
+    {#if message}
+        <div
+            class="p-4 rounded-lg {message.type === 'success'
+                ? 'bg-green-500/20 border border-green-500/50 text-green-200'
+                : 'bg-red-500/20 border border-red-500/50 text-red-200'}"
+            role="alert"
+        >
+            {message.text}
         </div>
     {/if}
 
-    {#if selectedTeam}
-        <!-- Team Stats -->
-        <div class="grid md:grid-cols-3 gap-4">
-            <div
-                class="bg-white/5 backdrop-blur-md rounded-xl p-6 border border-white/10"
-            >
-                <div class="text-gray-400 mb-2">Jugadores Fichados</div>
-                <div class="text-3xl font-bold text-white">
-                    {selectedTeam.playerDetails.length}/5
-                </div>
-            </div>
-            <div
-                class="bg-white/5 backdrop-blur-md rounded-xl p-6 border border-white/10"
-            >
-                <div class="text-gray-400 mb-2">Puntos del Equipo</div>
-                <div class="text-3xl font-bold text-green-400">
-                    {selectedTeam.totalPoints}
-                </div>
-            </div>
-            <div
-                class="bg-white/5 backdrop-blur-md rounded-xl p-6 border border-white/10"
-            >
-                <div class="text-gray-400 mb-2">Presupuesto Restante</div>
-                <div class="text-3xl font-bold text-yellow-400">
-                    {formatPrice(data.user?.budget || 0)}
-                </div>
-            </div>
-        </div>
+    <!-- Current Team -->
+    <div
+        class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6"
+    >
+        <h2 class="text-2xl font-bold text-white mb-4">
+            Equipo Titular ({$currentTeam.length}/5)
+        </h2>
 
-        <!-- Team Players Grid -->
-        <div
-            class="bg-white/5 backdrop-blur-md rounded-xl p-8 border border-white/10"
-        >
-            <h2 class="text-2xl font-bold text-white mb-6">Lineup</h2>
-
-            {#if selectedTeam.playerDetails.length === 0}
-                <div class="text-center py-16">
-                    <div class="text-6xl mb-4">♟️</div>
-                    <div class="text-xl text-gray-400 mb-4">
-                        No tienes jugadores en este equipo
-                    </div>
-                    <a
-                        href="/market"
-                        class="inline-block bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition"
+        {#if teamPlayers.length === 0}
+            <div class="text-center py-12">
+                <div class="text-6xl mb-4">👥</div>
+                <p class="text-gray-400 mb-4">Tu equipo está vacío</p>
+                <p class="text-gray-500 text-sm">
+                    Añade jugadores desde tu roster para comenzar
+                </p>
+            </div>
+        {:else}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {#each teamPlayers as player (player.id)}
+                    <div
+                        class="bg-white/5 border border-white/10 rounded-lg p-4 relative"
                     >
-                        Ir al Mercado
-                    </a>
-                </div>
-            {:else}
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {#each selectedTeam.playerDetails as player}
-                        <div
-                            class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-6 border-2 transition hover:scale-105 {selectedTeam.captainId ===
-                            player.id
-                                ? 'border-yellow-400'
-                                : 'border-white/10'}"
-                        >
-                            <!-- Captain Badge -->
-                            {#if selectedTeam.captainId === player.id}
-                                <div
-                                    class="absolute -top-3 -right-3 bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold"
+                        {#if $captain === player.id}
+                            <div class="absolute top-2 right-2">
+                                <span
+                                    class="inline-flex items-center bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded text-xs font-semibold"
                                 >
-                                    ⭐ CAPITÁN
-                                </div>
-                            {/if}
-
-                            <!-- Player Avatar -->
-                            <div class="flex justify-center mb-4">
-                                <div
-                                    class="w-24 h-24 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-5xl"
-                                >
-                                    ♔
-                                </div>
+                                    ⭐ Capitán
+                                </span>
                             </div>
+                        {/if}
 
-                            <!-- Player Info -->
-                            <div class="text-center mb-4">
-                                <h3 class="text-xl font-bold text-white mb-1">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div
+                                class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-2xl"
+                            >
+                                ♔
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-semibold text-white truncate">
                                     {player.name}
                                 </h3>
-                                <div class="text-sm text-gray-400">
-                                    Rank #{player.positionRank}
-                                </div>
-                                <div class="text-yellow-400 font-semibold mt-2">
-                                    {formatPrice(player.currentPrice)}
-                                </div>
-                            </div>
-
-                            <!-- Actions -->
-                            <div class="space-y-2">
-                                {#if selectedTeam.captainId !== player.id}
-                                    <button
-                                        onclick={() => setCaptain(player.id)}
-                                        class="w-full bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold transition"
-                                    >
-                                        ⭐ Hacer Capitán
-                                    </button>
-                                {/if}
-                                <button
-                                    onclick={() =>
-                                        sellPlayer(player.id, player.name)}
-                                    class="w-full bg-red-900/50 hover:bg-red-900 text-white px-4 py-2 rounded-lg font-semibold transition border border-red-500/50"
-                                >
-                                    💸 Vender (80%)
-                                </button>
+                                <p class="text-gray-400 text-sm">
+                                    Rating: {player.rating}
+                                </p>
                             </div>
                         </div>
-                    {/each}
 
-                    <!-- Add Player Placeholder -->
-                    {#if selectedTeam.playerDetails.length < 5}
-                        <a
-                            href="/market"
-                            class="bg-white/5 rounded-xl p-6 border-2 border-dashed border-white/20 flex flex-col items-center justify-center hover:bg-white/10 hover:border-purple-500/50 transition min-h-[300px]"
-                        >
-                            <div class="text-6xl mb-4">➕</div>
-                            <div class="text-xl font-semibold text-gray-300">
-                                Fichar Jugador
+                        <div class="flex gap-2">
+                            <button
+                                on:click={() => setCaptainPlayer(player.id)}
+                                class="flex-1 bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-300 border border-yellow-500/30 px-3 py-2 rounded-lg text-sm transition"
+                            >
+                                {$captain === player.id
+                                    ? "Quitar C"
+                                    : "Capitán"}
+                            </button>
+                            <button
+                                on:click={() => removeFromTeam(player.id)}
+                                class="flex-1 bg-red-600/20 hover:bg-red-600/30 text-red-300 border border-red-500/30 px-3 py-2 rounded-lg text-sm transition"
+                            >
+                                Quitar
+                            </button>
+                        </div>
+                    </div>
+                {/each}
+            </div>
+        {/if}
+    </div>
+
+    <!-- Roster (Bench) -->
+    <div
+        class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6"
+    >
+        <h2 class="text-2xl font-bold text-white mb-4">
+            Mi Roster ({$ownedPlayers.length}/15)
+        </h2>
+
+        {#if rosterPlayers.length === 0 && teamPlayers.length === 0}
+            <div class="text-center py-12">
+                <div class="text-6xl mb-4">💰</div>
+                <p class="text-gray-400 mb-4">
+                    No has fichado jugadores todavía
+                </p>
+                <a
+                    href="/Grandmaster-Fantasy/market"
+                    class="inline-block bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 rounded-lg font-semibold transition"
+                >
+                    Ir al Mercado
+                </a>
+            </div>
+        {:else if rosterPlayers.length === 0}
+            <div class="text-center py-8">
+                <p class="text-gray-400">
+                    Todos tus jugadores están en el equipo titular
+                </p>
+            </div>
+        {:else}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {#each rosterPlayers as player (player.id)}
+                    <div
+                        class="bg-white/5 border border-white/10 rounded-lg p-4"
+                    >
+                        <div class="flex items-center gap-3 mb-4">
+                            <div
+                                class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-2xl"
+                            >
+                                ♔
                             </div>
-                            <div class="text-sm text-gray-500 mt-2">
-                                {5 - selectedTeam.playerDetails.length} espacios
-                                disponibles
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-semibold text-white truncate">
+                                    {player.name}
+                                </h3>
+                                <p class="text-gray-400 text-sm">
+                                    Valor: {formatPrice(player.price)}
+                                </p>
                             </div>
-                        </a>
-                    {/if}
-                </div>
-            {/if}
-        </div>
-    {:else}
-        <!-- No Teams Yet -->
-        <div
-            class="bg-white/5 backdrop-blur-md rounded-xl p-16 border border-white/10 text-center"
-        >
-            <div class="text-6xl mb-4">🏆</div>
-            <h2 class="text-2xl font-bold text-white mb-4">
-                No tienes ningún equipo
-            </h2>
-            <p class="text-gray-400 mb-6">
-                Crea tu primer equipo para un torneo activo
-            </p>
-            <button
-                class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition"
-            >
-                Crear Equipo
-            </button>
-        </div>
-    {/if}
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button
+                                on:click={() => addToTeam(player.id)}
+                                disabled={$currentTeam.length >= 5}
+                                class="flex-1 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg text-sm transition"
+                            >
+                                {$currentTeam.length >= 5
+                                    ? "Equipo lleno"
+                                    : "Añadir"}
+                            </button>
+                            <button
+                                on:click={() => sellPlayer(player)}
+                                class="flex-1 bg-red-600/20 hover:bg-red-600/30 text-red-300 border border-red-500/30 px-3 py-2 rounded-lg text-sm transition"
+                            >
+                                Vender
+                            </button>
+                        </div>
+                    </div>
+                {/each}
+            </div>
+        {/if}
+    </div>
 </div>
