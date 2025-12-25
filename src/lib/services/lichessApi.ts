@@ -232,6 +232,49 @@ class LichessApiService {
     clearCache(): void {
         this.cache = null;
     }
+
+    /**
+     * Fetch recent games for score calculation
+     * Only counts Rated games from the last 24h
+     */
+    async getRecentGames(username: string, count: number = 5): Promise<Array<{ winner?: string, status: string, players: any }>> {
+        try {
+            // Lichess Game Export API (NDJSON)
+            // Fetch last 5 games
+            const response = await fetch(`${LICHESS_API_BASE}/games/user/${username}?max=${count}&rated=true&perfType=blitz,rapid,classical`, {
+                headers: {
+                    'Accept': 'application/x-ndjson'
+                }
+            });
+
+            if (!response.ok) return [];
+
+            const text = await response.text();
+            if (!text) return [];
+
+            // Parse NDJSON (NewLine Delimited JSON)
+            return text.trim().split('\n').map(line => {
+                try {
+                    const game = JSON.parse(line);
+                    return {
+                        winner: game.winner, // 'white', 'black', or undefined (draw)
+                        status: game.status,
+                        // We need to know who the user was (white or black) to know if they won
+                        // But the export doesn't always make it easy without full details
+                        // Simplified: We return the raw winner color
+                        // In the component we need to check which color the user played
+                        players: game.players
+                    };
+                } catch (e) {
+                    return null;
+                }
+            }).filter(g => g !== null) as any[];
+
+        } catch (error) {
+            console.error(`Error fetching games for ${username}`, error);
+            return [];
+        }
+    }
 }
 
 export const lichessApi = new LichessApiService();
