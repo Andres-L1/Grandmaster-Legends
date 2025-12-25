@@ -13,7 +13,7 @@ export interface User {
 // Default user data
 const DEFAULT_USER: User = {
     username: 'Rookie Collector',
-    coins: 1000,
+    coins: 0, // Starts at 0 to force selling the starter pack duplicate
     seenOnboarding: false
 };
 

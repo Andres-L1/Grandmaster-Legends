@@ -17,6 +17,7 @@
     let openedCards: { card: Player; isNew: boolean }[] = [];
     let showResultModal = false;
     let isStarter = false;
+    let duplicateSold = false;
 
     onMount(() => {
         // Auto-open starter pack if collection is empty
@@ -28,6 +29,7 @@
     function triggerStarterPack() {
         isStarter = true;
         isOpening = true;
+        duplicateSold = false; // Reset
         // Small delay to let store load
         setTimeout(() => {
             const cards = packService.openPack("STARTER", $allPlayers);
@@ -81,9 +83,23 @@
         showResultModal = true;
     }
 
+    function sellStarterDuplicate(card: Player) {
+        if (!duplicateSold) {
+            user.addCoins(100);
+            collectionIds.removeCard(card.id);
+            duplicateSold = true;
+            toast.success("¡Vendido! Has ganado 100 Monedas.");
+        }
+    }
+
     function closeResult() {
+        if (isStarter && !duplicateSold) {
+            toast.error("Debes vender la carta repetida para continuar.");
+            return;
+        }
         showResultModal = false;
         openedCards = [];
+        duplicateSold = false;
     }
 </script>
 
@@ -151,7 +167,6 @@
     </div>
 </div>
 
-<!-- Results Modal -->
 {#if showResultModal}
     <div
         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md"
@@ -168,16 +183,37 @@
             >
                 {#each openedCards as { card, isNew }, i}
                     <div
-                        class="animate-in slide-in-from-bottom-10 fade-in duration-500"
+                        class="animate-in slide-in-from-bottom-10 fade-in duration-500 relative group"
                         style="animation-delay: {Math.random() * 200}ms"
                     >
                         <Card player={card} {isNew} onClick={() => {}} />
                         {#if isStarter && !isNew}
-                            <div
-                                class="text-center mt-2 animate-pulse text-amber-400 font-bold text-sm bg-black/50 rounded px-2"
-                            >
-                                ¡DUPLICADO! (+20 Monedas)
-                            </div>
+                            {#if !duplicateSold}
+                                <div
+                                    class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center rounded-xl backdrop-blur-sm z-20 animate-in fade-in"
+                                >
+                                    <span
+                                        class="text-amber-400 font-bold mb-3 text-lg drop-shadow-md"
+                                        >¡REPETIDA!</span
+                                    >
+                                    <button
+                                        class="bg-green-500 hover:bg-green-400 text-black font-black text-sm px-4 py-3 rounded-full shadow-lg shadow-green-500/20 transition-all hover:scale-105 active:scale-95"
+                                        onclick={() =>
+                                            sellStarterDuplicate(card)}
+                                    >
+                                        VENDER (+100 🪙)
+                                    </button>
+                                </div>
+                            {:else}
+                                <div
+                                    class="absolute inset-0 bg-black/60 flex items-center justify-center rounded-xl z-20"
+                                >
+                                    <span
+                                        class="text-green-400 font-bold text-xl"
+                                        >✅ VENDIDA</span
+                                    >
+                                </div>
+                            {/if}
                         {/if}
                     </div>
                 {/each}
@@ -185,21 +221,23 @@
 
             <div class="flex justify-center pt-8">
                 <button
-                    class="bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-8 py-4 rounded-full text-lg shadow-xl shadow-amber-500/20 transition-transform hover:scale-105"
+                    class="bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-8 py-4 rounded-full text-lg shadow-xl shadow-amber-500/20 transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale"
                     onclick={closeResult}
+                    disabled={isStarter && !duplicateSold}
                 >
-                    Continuar y Guardar
+                    {isStarter && !duplicateSold
+                        ? "Vende la repetida para continuar"
+                        : "Continuar y Guardar"}
                 </button>
             </div>
 
             {#if isStarter}
                 <p
-                    class="text-center text-slate-400 text-sm max-w-lg mx-auto bg-slate-900/80 p-4 rounded-lg border border-white/5"
+                    class="text-center text-slate-400 text-sm max-w-lg mx-auto bg-slate-900/80 p-4 rounded-lg border border-white/5 mt-4"
                 >
-                    <strong>Tutorial:</strong> Has recibido 3 cartas, pero una está
-                    repetida. Las cartas repetidas se convierten automáticamente
-                    en monedas (o pueden venderse) para que puedas comprar más sobres.
-                    ¡Esa es la clave para crecer!
+                    <strong>Tutorial:</strong> Has recibido cartas, pero una está
+                    repetida. ¡Véndela para conseguir tus primeras monedas! Sin monedas
+                    no puedes comprar sobres.
                 </p>
             {/if}
         </div>
