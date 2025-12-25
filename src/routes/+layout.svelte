@@ -2,9 +2,7 @@
 	import { base } from "$app/paths";
 	import "../app.css";
 	import { user } from "$lib/stores/user";
-	import { ownedPlayers, ownedPlayerIds } from "$lib/stores/players";
 	import { onMount } from "svelte";
-	import { get } from "svelte/store";
 	import { toast } from "$lib/stores/toast";
 	import Modal from "$lib/components/Modal.svelte";
 	import Toast from "$lib/components/Toast.svelte";
@@ -13,107 +11,67 @@
 	let { children } = $props();
 	let showRules = $state(false);
 
-	function formatBudget(budget: number): string {
-		return `${(budget / 1000000).toFixed(0)}M`;
-	}
-
-	onMount(() => {
-		simulateMarketEvents();
-	});
-
-	function simulateMarketEvents() {
-		// 5% chance of market event on page load
-		if (Math.random() > 0.05) return;
-
-		const myPlayers = get(ownedPlayers);
-		if (myPlayers.length === 0) return;
-
-		// Pick random player
-		const targetPlayer =
-			myPlayers[Math.floor(Math.random() * myPlayers.length)];
-
-		// Bot offer logic
-		// Bots offer between 1.0x and 1.5x of market price
-		const offer = Math.floor(
-			targetPlayer.price * (1 + Math.random() * 0.5),
-		);
-
-		// If offer > clause, it's a forced buyout (Steal!)
-		if (offer >= targetPlayer.clause) {
-			ownedPlayerIds.sellPlayer(targetPlayer.id);
-			// Bonus: User gets the clause amount
-			const standardRefund = Math.floor(targetPlayer.price * 0.8);
-			const extra = targetPlayer.clause - standardRefund;
-			user.updateBudget(extra);
-
-			// Use Toast instead of Modal for cleaner flow
-			toast.error(
-				`¡CLAUSULAZO! Te han robado a ${targetPlayer.name} por ${formatBudget(targetPlayer.clause)}`,
-				6000,
-			);
-		} else {
-			// Just a notification of interest
-			toast.info(
-				`Rumor: Oferta de ${formatBudget(offer)} por ${targetPlayer.name} rechazada.`,
-				5000,
-			);
-		}
+	function formatCoins(coins: number): string {
+		return coins.toLocaleString();
 	}
 </script>
 
-<div class="min-h-screen relative">
+<div class="min-h-screen relative bg-slate-950 text-white">
 	<Toast />
+	<!-- Onboarding can stay, but might need text updates later -->
 	<OnboardingWizard />
 
 	<!-- Simple Clean Header -->
 	<nav
-		class="border-b border-white/5 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50"
+		class="border-b border-white/5 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50 shadow-2xl shadow-black/50"
 	>
 		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-			<div class="flex justify-between items-center h-16">
+			<div class="flex justify-between items-center h-20">
 				<!-- Logo/Brand -->
 				<a
 					href="{base}/"
-					class="text-xl font-bold font-serif flex items-center gap-2 text-white hover:text-primary transition-colors"
+					class="text-xl font-bold font-serif flex items-center gap-3 text-white hover:text-amber-500 transition-colors group"
 				>
-					<span class="text-2xl text-primary">♔</span>
-					<span class="hidden sm:inline tracking-tight"
-						>Grandmaster Fantasy</span
+					<span
+						class="text-4xl group-hover:scale-110 transition-transform duration-300"
+						>♟️</span
 					>
-					<span class="sm:hidden">GF</span>
+					<div class="flex flex-col">
+						<span
+							class="tracking-widest uppercase text-xs text-amber-500 font-sans font-bold"
+							>Grandmaster</span
+						>
+						<span class="text-xl leading-none">Legends</span>
+					</div>
 				</a>
 
 				<!-- Navigation Links -->
-				<div class="flex items-center gap-4 sm:gap-6">
+				<div class="flex items-center gap-2 sm:gap-6">
 					<a
-						href="{base}/market"
-						class="text-sm font-medium text-slate-400 hover:text-white transition-colors"
-						>Mercado</a
+						href="{base}/store"
+						class="text-sm font-bold uppercase tracking-widest text-slate-400 hover:text-amber-400 transition-colors px-3 py-2"
+						>Tienda</a
 					>
 					<a
-						href="{base}/my-team"
-						class="text-sm font-medium text-slate-400 hover:text-white transition-colors"
-						>Equipo</a
+						href="{base}/collection"
+						class="text-sm font-bold uppercase tracking-widest text-slate-400 hover:text-amber-400 transition-colors px-3 py-2"
+						>Colección</a
 					>
-					<a
-						href="{base}/stats"
-						class="text-sm font-medium text-slate-400 hover:text-white transition-colors"
-						>Stats</a
-					>
+
 					<button
 						onclick={() => (showRules = true)}
-						class="text-sm font-medium text-slate-400 hover:text-primary transition-colors"
+						class="text-sm font-medium text-slate-500 hover:text-white transition-colors ml-2"
 					>
-						Reglas
+						?
 					</button>
 
-					<!-- Budget Badge -->
+					<!-- Coin Balance -->
 					<div
-						class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20"
+						class="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-slate-950 border border-amber-500/20 shadow-inner"
 					>
-						<span class="text-lg">💰</span>
-						<span class="font-bold text-sm text-primary"
-							>{formatBudget($user.budget)}</span
+						<span class="text-xl">🪙</span>
+						<span class="font-bold font-mono text-amber-400"
+							>{formatCoins($user.coins)}</span
 						>
 					</div>
 				</div>
@@ -130,99 +88,71 @@
 <!-- Rules Modal -->
 <Modal
 	isOpen={showRules}
-	title="Reglas del Juego"
+	title="Reglas de Colección"
 	onClose={() => (showRules = false)}
 >
 	<div
 		class="space-y-6 text-sm text-slate-300 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar"
 	>
 		<section>
-			<h3 class="text-white font-serif font-bold text-lg mb-2">
-				💰 Mercado y Fichajes
+			<h3 class="text-amber-400 font-serif font-bold text-lg mb-2">
+				🃏 Colecciona Leyendas
 			</h3>
 			<ul class="list-disc pl-4 space-y-2 text-slate-400">
 				<li>
-					Tienes un presupuesto inicial de <strong
-						class="text-primary">100M</strong
-					>.
+					Tu objetivo es conseguir los <strong
+						>500 mejores jugadores</strong
+					> de ajedrez del mundo.
 				</li>
 				<li>
-					Puedes tener hasta <strong>15 jugadores</strong> en tu plantilla.
-				</li>
-				<li>
-					Al vender un jugador, recuperas el <strong
-						class="text-white">80%</strong
-					> de su valor actual.
+					Abre sobres en la <strong>Tienda</strong> usando tus monedas.
 				</li>
 			</ul>
 		</section>
 
 		<section>
-			<h3 class="text-primary font-serif font-bold text-lg mb-2">
-				🛡️ Cláusulas de Rescisión
+			<h3 class="text-white font-serif font-bold text-lg mb-2">
+				📦 Rarezas
 			</h3>
-			<div class="bg-slate-800/50 p-4 rounded-lg border border-white/5">
-				<p class="mb-3 text-slate-300">
-					Cada jugador tiene una cláusula. Si es baja, ¡te lo pueden
-					robar!
-				</p>
-				<ul class="list-disc pl-4 space-y-1 text-slate-400">
-					<li>La cláusula inicial es igual al precio de compra.</li>
-					<li>
-						Puedes <strong class="text-white"
-							>aumentar la cláusula</strong
-						> de cualquier jugador.
-					</li>
-					<li>
-						El coste de aumentar la cláusula es el <strong
-							class="text-red-400">10%</strong
-						> de la diferencia.
-					</li>
-					<li><em>Ejemplo: Subir de 10M a 20M cuesta 1M.</em></li>
-				</ul>
+			<div
+				class="bg-slate-800/50 p-4 rounded-lg border border-white/5 space-y-2"
+			>
+				<div class="flex items-center gap-2">
+					<div
+						class="w-3 h-3 rounded-full bg-orange-500 shadow-[0_0_10px_orange]"
+					></div>
+					<span class="text-orange-400 font-bold"
+						>Legendaria (2750+ Elo)</span
+					>
+				</div>
+				<div class="flex items-center gap-2">
+					<div class="w-3 h-3 rounded-full bg-purple-500"></div>
+					<span class="text-purple-400 font-bold"
+						>Épica (2650-2749 Elo)</span
+					>
+				</div>
+				<div class="flex items-center gap-2">
+					<div class="w-3 h-3 rounded-full bg-blue-500"></div>
+					<span class="text-blue-400 font-bold"
+						>Rara (2550-2649 Elo)</span
+					>
+				</div>
+				<div class="flex items-center gap-2">
+					<div class="w-3 h-3 rounded-full bg-slate-500"></div>
+					<span class="text-slate-400 font-bold"
+						>Común (&lt;2550 Elo)</span
+					>
+				</div>
 			</div>
 		</section>
 
 		<section>
-			<h3 class="text-success font-serif font-bold text-lg mb-2">
-				🏆 Puntuación
+			<h3 class="text-amber-400 font-serif font-bold text-lg mb-2">
+				💰 Economía
 			</h3>
-			<div class="grid grid-cols-2 gap-3 text-center text-xs">
-				<div
-					class="bg-slate-800/50 p-3 rounded-lg border border-white/5"
-				>
-					<div class="text-success font-bold text-xl">+10</div>
-					<div class="uppercase tracking-wider text-[10px] mt-1">
-						Victoria
-					</div>
-				</div>
-				<div
-					class="bg-slate-800/50 p-3 rounded-lg border border-white/5"
-				>
-					<div class="text-amber-400 font-bold text-xl">+3</div>
-					<div class="uppercase tracking-wider text-[10px] mt-1">
-						Tablas
-					</div>
-				</div>
-				<div
-					class="bg-slate-800/50 p-3 rounded-lg border border-white/5"
-				>
-					<div class="text-red-400 font-bold text-xl">-2</div>
-					<div class="uppercase tracking-wider text-[10px] mt-1">
-						Derrota
-					</div>
-				</div>
-				<div
-					class="bg-slate-800/50 p-3 rounded-lg border border-white/5"
-				>
-					<div class="text-blue-400 font-bold text-xl">+2</div>
-					<div class="uppercase tracking-wider text-[10px] mt-1">
-						Bonus Negras
-					</div>
-				</div>
-			</div>
-			<p class="mt-4 text-center text-xs text-slate-500 font-medium">
-				El Capitán (★) duplica todos sus puntos.
+			<p class="text-slate-400">
+				Ganas 100 monedas cada día que entras. También puedes vender tus
+				cartas repetidas (automáticamente se convierten en monedas).
 			</p>
 		</section>
 	</div>

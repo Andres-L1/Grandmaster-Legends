@@ -9,24 +9,30 @@ if (browser) {
 
 // Create writable store for user data
 function createUserStore() {
-    const initialUser: User = browser ? storageService.getUser() : { username: 'Guest Player', budget: 100000000, totalPoints: 0, seenOnboarding: false };
+    const initialUser: User = browser ? storageService.getUser() : { username: 'Rookie Collector', coins: 1000, seenOnboarding: false };
     const { subscribe, set, update } = writable<User>(initialUser);
 
     return {
         subscribe,
-        updateBudget: (amount: number) => {
+        addCoins: (amount: number) => {
             update(user => {
-                const newUser = { ...user, budget: user.budget + amount };
+                const newUser = { ...user, coins: user.coins + amount };
                 if (browser) storageService.saveUser(newUser);
                 return newUser;
             });
         },
-        addPoints: (points: number) => {
+        spendCoins: (amount: number) => {
+            let success = false;
             update(user => {
-                const newUser = { ...user, totalPoints: user.totalPoints + points };
-                if (browser) storageService.saveUser(newUser);
-                return newUser;
+                if (user.coins >= amount) {
+                    const newUser = { ...user, coins: user.coins - amount };
+                    if (browser) storageService.saveUser(newUser);
+                    success = true;
+                    return newUser;
+                }
+                return user; // Insufficient funds
             });
+            return success;
         },
         setUsername: (username: string) => {
             update(user => {
@@ -43,9 +49,12 @@ function createUserStore() {
             });
         },
         reset: () => {
-            const defaultUser = { username: 'Guest Player', budget: 100000000, totalPoints: 0, seenOnboarding: false };
+            const defaultUser = { username: 'Rookie Collector', coins: 1000, seenOnboarding: false };
             set(defaultUser);
-            if (browser) storageService.saveUser(defaultUser);
+            if (browser) {
+                storageService.resetAll();
+                storageService.initialize();
+            }
         }
     };
 }

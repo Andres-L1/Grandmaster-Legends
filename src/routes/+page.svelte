@@ -1,152 +1,139 @@
 <script lang="ts">
     import { base } from "$app/paths";
     import { user } from "$lib/stores/user";
-    import { ownedPlayers } from "$lib/stores/players";
-    import { teamPlayers } from "$lib/stores/teams";
+    import { collectionIds } from "$lib/stores/players";
 </script>
 
 <svelte:head>
-    <title>Grandmaster Fantasy - Fantasy Chess</title>
+    <title>Grandmaster Legends - Chess TCG</title>
 </svelte:head>
 
-<div class="space-y-12">
+<div class="space-y-16 py-12">
     <!-- Hero Section -->
-    <div class="text-center space-y-4 py-12">
+    <div class="text-center space-y-8 relative">
+        <div
+            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-[100px] pointer-events-none"
+        ></div>
+
         <h1
-            class="text-4xl sm:text-5xl font-bold"
-            style="color: rgb(227, 242, 253);"
+            class="text-6xl md:text-8xl font-black font-serif tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white via-slate-200 to-slate-500 mb-4"
         >
-            Grandmaster Fantasy
+            Grandmaster<br />
+            <span
+                class="text-amber-500 drop-shadow-[0_0_30px_rgba(245,158,11,0.5)]"
+                >Legends</span
+            >
         </h1>
         <p
-            class="text-lg sm:text-xl max-w-2xl mx-auto"
-            style="color: rgb(176, 190, 197);"
+            class="text-xl md:text-2xl text-slate-400 max-w-2xl mx-auto leading-relaxed"
         >
-            Crea tu equipo con los mejores ajedrecistas del mundo. Datos reales
-            de Lichess.
+            Colecciona a los mejores ajedrecistas de la historia. Abre sobres,
+            encuentra leyendas y completa tu álbum.
         </p>
 
         <!-- Stats Preview -->
-        <div class="grid grid-cols-3 gap-4 max-w-md mx-auto mt-8">
-            <div class="card text-center">
-                <div
-                    class="text-2xl font-bold"
-                    style="color: rgb(255, 160, 0);"
-                >
-                    {($user.budget / 1000000).toFixed(0)}M
+        <div class="flex justify-center gap-8 py-8">
+            <div
+                class="text-center p-4 bg-slate-900/50 rounded-2xl border border-white/5 backdrop-blur-sm min-w-[120px]"
+            >
+                <div class="text-4xl font-mono font-bold text-amber-400">
+                    {$user.coins}
                 </div>
-                <div class="text-xs mt-1" style="color: rgb(120, 144, 156);">
-                    Presupuesto
+                <div
+                    class="text-xs uppercase tracking-widest text-slate-500 mt-2"
+                >
+                    Monedas
                 </div>
             </div>
-            <div class="card text-center">
+            <div
+                class="text-center p-4 bg-slate-900/50 rounded-2xl border border-white/5 backdrop-blur-sm min-w-[120px]"
+            >
+                <div class="text-4xl font-mono font-bold text-white">
+                    {$collectionIds.length}
+                </div>
                 <div
-                    class="text-2xl font-bold"
-                    style="color: rgb(46, 125, 50);"
+                    class="text-xs uppercase tracking-widest text-slate-500 mt-2"
                 >
-                    {$ownedPlayers.length}
-                </div>
-                <div class="text-xs mt-1" style="color: rgb(120, 144, 156);">
-                    Jugadores
-                </div>
-            </div>
-            <div class="card text-center">
-                <div
-                    class="text-2xl font-bold"
-                    style="color: rgb(21, 101, 192);"
-                >
-                    {$teamPlayers.length}/5
-                </div>
-                <div class="text-xs mt-1" style="color: rgb(120, 144, 156);">
-                    En Equipo
+                    Cartas
                 </div>
             </div>
         </div>
 
         <!-- CTA -->
-        <div class="flex flex-col sm:flex-row gap-4 justify-center pt-6">
-            <a href="{base}/market" class="btn-primary px-6 py-3">
-                Ver Mercado
+        <div
+            class="flex flex-col sm:flex-row gap-6 justify-center pt-4 relative z-10"
+        >
+            <a
+                href="{base}/store"
+                class="bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-8 py-4 rounded-xl text-lg shadow-xl shadow-amber-500/20 transition-all hover:scale-105"
+            >
+                Abrir Sobres
             </a>
-            <a href="{base}/my-team" class="btn-secondary px-6 py-3">
-                Mi Equipo
+            <a
+                href="{base}/collection"
+                class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-8 py-4 rounded-xl text-lg border border-white/10 transition-all hover:scale-105"
+            >
+                Ver Colección
             </a>
         </div>
     </div>
 
     <!-- How It Works -->
-    <div class="max-w-3xl mx-auto">
-        <h2
-            class="text-2xl font-bold text-center mb-8"
-            style="color: rgb(227, 242, 253);"
-        >
-            ¿Cómo Funciona?
+    <div class="max-w-5xl mx-auto px-4">
+        <h2 class="text-3xl font-serif font-bold text-center text-white mb-12">
+            El Camino a la Gloria
         </h2>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div class="text-center">
-                <div class="text-4xl mb-3">💰</div>
-                <h3
-                    class="font-semibold mb-2"
-                    style="color: rgb(227, 242, 253);"
-                >
-                    1. Ficha Jugadores
-                </h3>
-                <p class="text-sm" style="color: rgb(120, 144, 156);">
-                    Con 100M de presupuesto inicial, ficha a los mejores GMs del
-                    mundo
-                </p>
-            </div>
-            <div class="text-center">
-                <div class="text-4xl mb-3">♔</div>
-                <h3
-                    class="font-semibold mb-2"
-                    style="color: rgb(227, 242, 253);"
-                >
-                    2. Crea tu Equipo
-                </h3>
-                <p class="text-sm" style="color: rgb(120, 144, 156);">
-                    Selecciona 5 jugadores para tu alineación y elige un capitán
-                </p>
-            </div>
-            <div class="text-center">
-                <div class="text-4xl mb-3">🏆</div>
-                <h3
-                    class="font-semibold mb-2"
-                    style="color: rgb(227, 242, 253);"
-                >
-                    3. Gana Puntos
-                </h3>
-                <p class="text-sm" style="color: rgb(120, 144, 156);">
-                    Tus jugadores puntúan según sus partidas reales de ajedrez
-                </p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Features -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
-        <div class="card">
-            <h3
-                class="text-lg font-semibold mb-2"
-                style="color: rgb(227, 242, 253);"
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div
+                class="bg-slate-900/40 p-8 rounded-2xl border border-white/5 text-center group hover:border-amber-500/20 transition-colors"
             >
-                Datos Reales de Lichess
-            </h3>
-            <p class="text-sm" style="color: rgb(120, 144, 156);">
-                Jugadores del top 50 de ajedrez clásico con ratings actualizados
-            </p>
-        </div>
-        <div class="card">
-            <h3
-                class="text-lg font-semibold mb-2"
-                style="color: rgb(227, 242, 253);"
+                <div
+                    class="text-5xl mb-6 group-hover:scale-110 transition-transform"
+                >
+                    🪙
+                </div>
+                <h3 class="text-xl font-bold text-white mb-3">
+                    1. Consigue Monedas
+                </h3>
+                <p class="text-slate-400">
+                    Gana monedas diarias y vende cartas repetidas para financiar
+                    tu búsqueda.
+                </p>
+            </div>
+            <div
+                class="bg-slate-900/40 p-8 rounded-2xl border border-white/5 text-center group hover:border-amber-500/20 transition-colors"
             >
-                Sistema de Puntuación
-            </h3>
-            <p class="text-sm" style="color: rgb(120, 144, 156);">
-                Victoria +10, Tablas +3, Derrota -2. El capitán gana puntos
-                dobles
-            </p>
+                <div
+                    class="text-5xl mb-6 group-hover:scale-110 transition-transform"
+                >
+                    📦
+                </div>
+                <h3 class="text-xl font-bold text-white mb-3">
+                    2. Abre Sobres
+                </h3>
+                <p class="text-slate-400">
+                    Prueba suerte con sobres de diferente rareza. ¿Encontrarás
+                    una carta <span class="text-orange-400 font-bold"
+                        >Legendaria</span
+                    >?
+                </p>
+            </div>
+            <div
+                class="bg-slate-900/40 p-8 rounded-2xl border border-white/5 text-center group hover:border-amber-500/20 transition-colors"
+            >
+                <div
+                    class="text-5xl mb-6 group-hover:scale-110 transition-transform"
+                >
+                    📖
+                </div>
+                <h3 class="text-xl font-bold text-white mb-3">
+                    3. Completa el Álbum
+                </h3>
+                <p class="text-slate-400">
+                    500 cartas por coleccionar. Desde Maestros hasta los
+                    Campeones del Mundo.
+                </p>
+            </div>
         </div>
     </div>
 </div>
