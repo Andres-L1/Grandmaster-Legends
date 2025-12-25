@@ -1,7 +1,9 @@
 import { writable, derived } from 'svelte/store';
-import { storageService } from './localStorage';
+import { storageService, type Player } from './localStorage';
 import { browser } from '$app/environment';
 import { ownedPlayerIds } from './players';
+import { get } from 'svelte/store';
+import { allPlayers } from './players';
 
 // Create writable store for current team lineup (max 5 players)
 function createCurrentTeamStore() {
@@ -12,6 +14,7 @@ function createCurrentTeamStore() {
         subscribe,
         addToTeam: (playerId: string): { success: boolean; message: string } => {
             let result = { success: false, message: '' };
+            const owned = get(ownedPlayerIds);
 
             update(team => {
                 // Check if already in team
@@ -27,12 +30,7 @@ function createCurrentTeamStore() {
                 }
 
                 // Check if player is owned
-                let isOwned = false;
-                ownedPlayerIds.subscribe(ids => {
-                    isOwned = ids.includes(playerId);
-                })();
-
-                if (!isOwned) {
+                if (!owned.includes(playerId)) {
                     result = { success: false, message: 'Primero debes fichar a este jugador' };
                     return team;
                 }
@@ -108,3 +106,11 @@ export const teamSize = derived(currentTeam, ($team) => $team.length);
 
 // Derived store to check if team is full
 export const isTeamFull = derived(teamSize, ($size) => $size >= 5);
+
+// Derived store for team players (full objects)
+export const teamPlayers = derived(
+    [currentTeam, allPlayers],
+    ([$team, $allPlayers]) => {
+        return $allPlayers.filter(p => $team.includes(p.id));
+    }
+);

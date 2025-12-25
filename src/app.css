@@ -2,12 +2,95 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-	font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
-		Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+@layer base {
+	:root {
+		/* Chess-themed professional palette */
+		--color-primary: 46 125 50;
+		/* Forest Green #2E7D32 */
+		--color-secondary: 21 101 192;
+		/* Deep Blue #1565C0 */
+		--color-accent: 255 160 0;
+		/* Amber #FFA000 */
+
+		--color-background: 10 25 41;
+		/* Dark blue-gray #0A1929 */
+		--color-surface: 26 35 50;
+		/* Slightly lighter #1A2332 */
+		--color-surface-elevated: 33 45 63;
+		/* #212D3F */
+
+		--color-text: 227 242 253;
+		/* Light blue-white #E3F2FD */
+		--color-text-secondary: 176 190 197;
+		/* #B0BEC5 */
+		--color-text-muted: 120 144 156;
+		/* #78909C */
+
+		--color-success: 102 187 106;
+		/* #66BB6A */
+		--color-warning: 255 183 77;
+		/* #FFB74D */
+		--color-error: 239 83 80;
+		/* #EF5350 */
+
+		--color-border: 55 71 79;
+		/* #37474F */
+	}
+
+	body {
+		@apply bg-slate-950 text-slate-50;
+		background: rgb(var(--color-background));
+		color: rgb(var(--color-text));
+		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+	}
 }
 
-body {
-	margin: 0;
-	padding: 0;
+@layer components {
+
+	/* Primary Button */
+	.btn-primary {
+		@apply bg-green-700 hover:bg-green-800 text-white font-medium px-4 py-2 rounded-lg transition;
+		background: rgb(var(--color-primary));
+	}
+
+	.btn-primary:hover {
+		background: rgb(43 115 46);
+	}
+
+	/* Secondary Button */
+	.btn-secondary {
+		@apply bg-blue-700 hover:bg-blue-800 text-white font-medium px-4 py-2 rounded-lg transition;
+		background: rgb(var(--color-secondary));
+	}
+
+	/* Success Button */
+	.btn-success {
+		background: rgb(var(--color-success));
+		@apply hover:bg-green-600 text-white font-medium px-4 py-2 rounded-lg transition;
+	}
+
+	/* Danger Button */
+	.btn-danger {
+		background: rgb(var(--color-error));
+		@apply hover:bg-red-600 text-white font-medium px-4 py-2 rounded-lg transition;
+	}
+
+	/* Card */
+	.card {
+		background: rgb(var(--color-surface));
+		border: 1px solid rgb(var(--color-border) / 0.3);
+		@apply rounded-lg p-4;
+	}
+
+	/* Input */
+	.input {
+		background: rgb(var(--color-surface-elevated));
+		border: 1px solid rgb(var(--color-border) / 0.5);
+		color: rgb(var(--color-text));
+		@apply px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600;
+	}
+
+	.input:focus {
+		border-color: rgb(var(--color-primary));
+	}
 }

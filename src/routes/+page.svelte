@@ -2,174 +2,151 @@
     import { base } from "$app/paths";
     import { user } from "$lib/stores/user";
     import { ownedPlayers } from "$lib/stores/players";
-    import { currentTeam } from "$lib/stores/teams";
-
-    function formatBudget(budget: number): string {
-        return `${(budget / 1000000).toFixed(1)}M`;
-    }
+    import { teamPlayers } from "$lib/stores/teams";
 </script>
 
 <svelte:head>
     <title>Grandmaster Fantasy - Fantasy Chess</title>
 </svelte:head>
 
-<div class="space-y-8 pb-4">
+<div class="space-y-12">
     <!-- Hero Section -->
-    <div class="text-center space-y-4">
-        <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-4">
-            Bienvenido, <span
-                class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600"
-                >{$user.username}</span
-            >
+    <div class="text-center space-y-4 py-12">
+        <h1
+            class="text-4xl sm:text-5xl font-bold"
+            style="color: rgb(227, 242, 253);"
+        >
+            Grandmaster Fantasy
         </h1>
-        <p class="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto">
-            El primer Fantasy Sports exclusivo para Ajedrez. Ficha a los mejores
-            Grandes Maestros del mundo y compite en torneos reales.
+        <p
+            class="text-lg sm:text-xl max-w-2xl mx-auto"
+            style="color: rgb(176, 190, 197);"
+        >
+            Crea tu equipo con los mejores ajedrecistas del mundo. Datos reales
+            de Lichess.
         </p>
 
-        <!-- User Stats -->
-        <div class="grid grid-cols-3 gap-3 sm:gap-4 max-w-2xl mx-auto mt-8">
-            <div
-                class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4"
-            >
-                <div class="text-2xl sm:text-3xl font-bold text-yellow-400">
-                    {formatBudget($user.budget)}
+        <!-- Stats Preview -->
+        <div class="grid grid-cols-3 gap-4 max-w-md mx-auto mt-8">
+            <div class="card text-center">
+                <div
+                    class="text-2xl font-bold"
+                    style="color: rgb(255, 160, 0);"
+                >
+                    {($user.budget / 1000000).toFixed(0)}M
                 </div>
-                <div class="text-xs sm:text-sm text-gray-400 mt-1">
+                <div class="text-xs mt-1" style="color: rgb(120, 144, 156);">
                     Presupuesto
                 </div>
             </div>
-            <div
-                class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4"
-            >
-                <div class="text-2xl sm:text-3xl font-bold text-purple-400">
-                    {$user.totalPoints}
+            <div class="card text-center">
+                <div
+                    class="text-2xl font-bold"
+                    style="color: rgb(46, 125, 50);"
+                >
+                    {$ownedPlayers.length}
                 </div>
-                <div class="text-xs sm:text-sm text-gray-400 mt-1">Puntos</div>
+                <div class="text-xs mt-1" style="color: rgb(120, 144, 156);">
+                    Jugadores
+                </div>
             </div>
-            <div
-                class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4"
-            >
-                <div class="text-2xl sm:text-3xl font-bold text-pink-400">
-                    {$currentTeam.length}/5
+            <div class="card text-center">
+                <div
+                    class="text-2xl font-bold"
+                    style="color: rgb(21, 101, 192);"
+                >
+                    {$teamPlayers.length}/5
                 </div>
-                <div class="text-xs sm:text-sm text-gray-400 mt-1">Equipo</div>
+                <div class="text-xs mt-1" style="color: rgb(120, 144, 156);">
+                    En Equipo
+                </div>
             </div>
         </div>
 
-        <!-- CTA Buttons -->
-        <div
-            class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mt-8 px-4"
-        >
-            <a
-                href="{base}/market"
-                class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold text-base sm:text-lg transition transform hover:scale-105 active:scale-95"
-            >
-                💰 Explorar Mercado
+        <!-- CTA -->
+        <div class="flex flex-col sm:flex-row gap-4 justify-center pt-6">
+            <a href="{base}/market" class="btn-primary px-6 py-3">
+                Ver Mercado
             </a>
-            <a
-                href="{base}/my-team"
-                class="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold text-base sm:text-lg transition border border-white/20"
-            >
-                👥 Ver Mi Equipo
+            <a href="{base}/my-team" class="btn-secondary px-6 py-3">
+                Mi Equipo
             </a>
         </div>
     </div>
 
-    <!-- Features Grid -->
-    <div
-        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-12 sm:mt-16"
-    >
-        <div
-            class="bg-white/5 backdrop-blur-md p-5 sm:p-6 rounded-xl border border-white/10 hover:border-purple-500/50 transition"
+    <!-- How It Works -->
+    <div class="max-w-3xl mx-auto">
+        <h2
+            class="text-2xl font-bold text-center mb-8"
+            style="color: rgb(227, 242, 253);"
         >
-            <div class="text-3xl sm:text-4xl mb-3 sm:mb-4">💰</div>
-            <h3 class="text-lg sm:text-xl font-semibold text-white mb-2">
-                Presupuesto Virtual
-            </h3>
-            <p class="text-sm sm:text-base text-gray-400">
-                Empieza con 100M y gestiona tu presupuesto estratégicamente para
-                fichar a los mejores GMs.
-            </p>
-        </div>
-
-        <div
-            class="bg-white/5 backdrop-blur-md p-5 sm:p-6 rounded-xl border border-white/10 hover:border-purple-500/50 transition"
-        >
-            <div class="text-3xl sm:text-4xl mb-3 sm:mb-4">🏆</div>
-            <h3 class="text-lg sm:text-xl font-semibold text-white mb-2">
-                Torneos Reales
-            </h3>
-            <p class="text-sm sm:text-base text-gray-400">
-                Tus jugadores compiten en torneos reales de ajedrez. Gana puntos
-                según sus resultados.
-            </p>
-        </div>
-
-        <div
-            class="bg-white/5 backdrop-blur-md p-5 sm:p-6 rounded-xl border border-white/10 hover:border-purple-500/50 transition sm:col-span-2 lg:col-span-1"
-        >
-            <div class="text-3xl sm:text-4xl mb-3 sm:mb-4">📊</div>
-            <h3 class="text-lg sm:text-xl font-semibold text-white mb-2">
-                Ligas Globales
-            </h3>
-            <p class="text-sm sm:text-base text-gray-400">
-                Compite en la liga global o crea ligas privadas con tus amigos.
-            </p>
-        </div>
-    </div>
-
-    <!-- Scoring System -->
-    <div
-        class="bg-gradient-to-r from-purple-900/40 to-pink-900/40 backdrop-blur-md rounded-xl p-6 sm:p-8 border border-white/10"
-    >
-        <h2 class="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">
-            Sistema de Puntuación
+            ¿Cómo Funciona?
         </h2>
-        <div
-            class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4"
-        >
-            <div class="text-center bg-white/5 rounded-lg p-3 sm:p-4">
-                <div class="text-2xl sm:text-3xl font-bold text-green-400">
-                    +10
-                </div>
-                <div class="text-xs sm:text-sm text-gray-300 mt-1">
-                    Victoria
-                </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div class="text-center">
+                <div class="text-4xl mb-3">💰</div>
+                <h3
+                    class="font-semibold mb-2"
+                    style="color: rgb(227, 242, 253);"
+                >
+                    1. Ficha Jugadores
+                </h3>
+                <p class="text-sm" style="color: rgb(120, 144, 156);">
+                    Con 100M de presupuesto inicial, ficha a los mejores GMs del
+                    mundo
+                </p>
             </div>
-            <div class="text-center bg-white/5 rounded-lg p-3 sm:p-4">
-                <div class="text-2xl sm:text-3xl font-bold text-yellow-400">
-                    +3
-                </div>
-                <div class="text-xs sm:text-sm text-gray-300 mt-1">Tablas</div>
+            <div class="text-center">
+                <div class="text-4xl mb-3">♔</div>
+                <h3
+                    class="font-semibold mb-2"
+                    style="color: rgb(227, 242, 253);"
+                >
+                    2. Crea tu Equipo
+                </h3>
+                <p class="text-sm" style="color: rgb(120, 144, 156);">
+                    Selecciona 5 jugadores para tu alineación y elige un capitán
+                </p>
             </div>
-            <div class="text-center bg-white/5 rounded-lg p-3 sm:p-4">
-                <div class="text-2xl sm:text-3xl font-bold text-red-400">
-                    -2
-                </div>
-                <div class="text-xs sm:text-sm text-gray-300 mt-1">Derrota</div>
-            </div>
-            <div class="text-center bg-white/5 rounded-lg p-3 sm:p-4">
-                <div class="text-2xl sm:text-3xl font-bold text-purple-400">
-                    +2
-                </div>
-                <div class="text-xs sm:text-sm text-gray-300 mt-1">
-                    Bonus Negras
-                </div>
-            </div>
-            <div
-                class="text-center bg-white/5 rounded-lg p-3 sm:p-4 col-span-2 sm:col-span-1"
-            >
-                <div class="text-2xl sm:text-3xl font-bold text-pink-400">
-                    +5
-                </div>
-                <div class="text-xs sm:text-sm text-gray-300 mt-1">
-                    Racha (3+ wins)
-                </div>
+            <div class="text-center">
+                <div class="text-4xl mb-3">🏆</div>
+                <h3
+                    class="font-semibold mb-2"
+                    style="color: rgb(227, 242, 253);"
+                >
+                    3. Gana Puntos
+                </h3>
+                <p class="text-sm" style="color: rgb(120, 144, 156);">
+                    Tus jugadores puntúan según sus partidas reales de ajedrez
+                </p>
             </div>
         </div>
-        <p class="text-xs sm:text-sm text-gray-400 mt-4 text-center">
-            ⭐ El capitán gana puntos dobles
-        </p>
+    </div>
+
+    <!-- Features -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <div class="card">
+            <h3
+                class="text-lg font-semibold mb-2"
+                style="color: rgb(227, 242, 253);"
+            >
+                Datos Reales de Lichess
+            </h3>
+            <p class="text-sm" style="color: rgb(120, 144, 156);">
+                Jugadores del top 50 de ajedrez clásico con ratings actualizados
+            </p>
+        </div>
+        <div class="card">
+            <h3
+                class="text-lg font-semibold mb-2"
+                style="color: rgb(227, 242, 253);"
+            >
+                Sistema de Puntuación
+            </h3>
+            <p class="text-sm" style="color: rgb(120, 144, 156);">
+                Victoria +10, Tablas +3, Derrota -2. El capitán gana puntos
+                dobles
+            </p>
+        </div>
     </div>
 </div>

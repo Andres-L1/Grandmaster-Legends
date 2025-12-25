@@ -1,7 +1,25 @@
-import { writable, derived } from 'svelte/store';
-import { storageService, AVAILABLE_PLAYERS, type Player } from './localStorage';
+import { writable, derived, get } from 'svelte/store';
+import { lichessApi, type Player } from '$lib/services/lichessApi';
+import { storageService } from './localStorage';
 import { browser } from '$app/environment';
 import { user } from './user';
+
+// Store for all available players from Lichess API
+const availablePlayersStore = writable<Player[]>([]);
+
+// Loading state
+export const playersLoading = writable<boolean>(true);
+
+// Initialize players from Lichess API
+if (browser) {
+    lichessApi.getTopPlayers(50).then(players => {
+        availablePlayersStore.set(players);
+        playersLoading.set(false);
+    }).catch(err => {
+        console.error('Failed to load players:', err);
+        playersLoading.set(false);
+    });
+}
 
 // Create writable store for owned player IDs
 function createOwnedPlayersStore() {
@@ -12,9 +30,10 @@ function createOwnedPlayersStore() {
         subscribe,
         buyPlayer: (playerId: string, price: number): { success: boolean; message: string } => {
             let result = { success: false, message: '' };
+            const allPlayers = get(availablePlayersStore);
 
             update(ownedIds => {
-                const player = AVAILABLE_PLAYERS.find(p => p.id === playerId);
+                const player = allPlayers.find(p => p.id === playerId);
                 if (!player) {
                     result = { success: false, message: 'Jugador no encontrado' };
                     return ownedIds;
@@ -31,12 +50,8 @@ function createOwnedPlayersStore() {
                 }
 
                 // Check budget via user store
-                let canAfford = false;
-                user.subscribe(u => {
-                    canAfford = u.budget >= price;
-                })();
-
-                if (!canAfford) {
+                const currentUser = get(user);
+                if (currentUser.budget < price) {
                     result = { success: false, message: 'Presupuesto insuficiente' };
                     return ownedIds;
                 }
@@ -56,6 +71,7 @@ function createOwnedPlayersStore() {
         },
         sellPlayer: (playerId: string): { success: boolean; message: string } => {
             let result = { success: false, message: '' };
+            const allPlayers = get(availablePlayersStore);
 
             update(ownedIds => {
                 if (!ownedIds.includes(playerId)) {
@@ -63,7 +79,7 @@ function createOwnedPlayersStore() {
                     return ownedIds;
                 }
 
-                const player = AVAILABLE_PLAYERS.find(p => p.id === playerId);
+                const player = allPlayers.find(p => p.id === playerId);
                 if (!player) {
                     result = { success: false, message: 'Jugador no encontrado' };
                     return ownedIds;
@@ -77,7 +93,7 @@ function createOwnedPlayersStore() {
                 const newIds = ownedIds.filter(id => id !== playerId);
                 if (browser) storageService.saveOwnedPlayerIds(newIds);
 
-                result = { success: true, message: `${player.name} vendido por ${refund.toLocaleString()}` };
+                result = { success: true, message: `${player.name} vendido por ${(refund / 1000000).toFixed(0)}M` };
                 return newIds;
             });
 
@@ -93,11 +109,20 @@ function createOwnedPlayersStore() {
 export const ownedPlayerIds = createOwnedPlayersStore();
 
 // Derived store for owned player objects
-export const ownedPlayers = derived(ownedPlayerIds, ($ownedIds) => {
-    return AVAILABLE_PLAYERS.filter(p => $ownedIds.includes(p.id));
-});
+export const ownedPlayers = derived(
+    [ownedPlayerIds, availablePlayersStore],
+    ([$ownedIds, $allPlayers]) => {
+        return $allPlayers.filter(p => $ownedIds.includes(p.id));
+    }
+);
 
 // Derived store for available (not owned) players
-export const availablePlayers = derived(ownedPlayerIds, ($ownedIds) => {
-    return AVAILABLE_PLAYERS.filter(p => !$ownedIds.includes(p.id));
-});
+export const availablePlayers = derived(
+    [ownedPlayerIds, availablePlayersStore],
+    ([$ownedIds, $allPlayers]) => {
+        return $allPlayers.filter(p => !$ownedIds.includes(p.id));
+    }
+);
+
+// All players (for use in components)
+export const allPlayers = availablePlayersStore;
