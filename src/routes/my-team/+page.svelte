@@ -119,7 +119,7 @@
     <!-- Active Lineup -->
     <div class="card">
         <h2 class="text-xl font-bold mb-4" style="color: rgb(227, 242, 253);">
-            Alineación Activa ({$currentTeam.length}/5)
+            Alineación Activa ({$currentTeam.length}/3)
         </h2>
 
         {#if $teamPlayers.length === 0}
@@ -162,6 +162,9 @@
                                     {player.name}
                                 </h3>
                                 <div class="text-xs text-gray-400 mt-1">
+                                    @{player.username}
+                                </div>
+                                <div class="text-xs text-gray-400">
                                     Rating: {player.rating}
                                 </div>
                             </div>
@@ -250,9 +253,14 @@
                 {#each rosterPlayers as player (player.id)}
                     <div class="card">
                         <div class="flex justify-between items-start mb-2">
-                            <h3 class="font-semibold text-white">
-                                {player.name}
-                            </h3>
+                            <div>
+                                <h3 class="font-semibold text-white">
+                                    {player.name}
+                                </h3>
+                                <div class="text-xs text-gray-400">
+                                    @{player.username}
+                                </div>
+                            </div>
                             <div
                                 class="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400"
                             >
@@ -275,7 +283,7 @@
                         <div class="flex gap-2">
                             <button
                                 onclick={() => addToTeam(player.id)}
-                                disabled={$currentTeam.length >= 5}
+                                disabled={$currentTeam.length >= 3}
                                 class="flex-1 btn-primary text-sm"
                             >
                                 Alinear

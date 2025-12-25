@@ -5,6 +5,10 @@
 
     $: totalValue = $ownedPlayers.reduce((sum, p) => sum + p.price, 0);
     $: teamValue = $teamPlayers.reduce((sum, p) => sum + p.price, 0);
+
+    function formatPrice(price: number): string {
+        return `${(price / 1000000).toFixed(0)}M`;
+    }
 </script>
 
 <svelte:head>
@@ -88,7 +92,7 @@
             <div class="flex justify-between">
                 <span style="color: rgb(120, 144, 156);">En Alineación:</span>
                 <span style="color: rgb(227, 242, 253);" class="font-medium"
-                    >{$teamPlayers.length}/5</span
+                    >{$teamPlayers.length}/3</span
                 >
             </div>
         </div>
@@ -106,12 +110,13 @@
             <div class="space-y-2">
                 {#each $ownedPlayers
                     .slice(0, 5)
-                    .sort((a, b) => b.rating - a.rating) as player}
+                    .sort((a, b) => b.rating - a.rating) as player, index}
                     <div
-                        class="flex justify-between items-center p-3 rounded-lg"
-                        style="background: rgba(33, 45, 63, 0.5);"
+                        class="flex items-center gap-3 p-3 rounded-lg"
+                        style="background: rgba(255, 255, 255, 0.03);"
                     >
-                        <div>
+                        <div class="text-2xl">#{index + 1}</div>
+                        <div class="flex-1">
                             <div
                                 class="font-medium"
                                 style="color: rgb(227, 242, 253);"
@@ -119,17 +124,19 @@
                                 {player.name}
                             </div>
                             <div
-                                class="text-sm"
+                                class="text-xs"
                                 style="color: rgb(120, 144, 156);"
                             >
-                                Rating: {player.rating}
+                                @{player.username} • Rating {player.rating}
                             </div>
                         </div>
-                        <div
-                            class="font-semibold"
-                            style="color: rgb(255, 160, 0);"
-                        >
-                            {(player.price / 1000000).toFixed(0)}M
+                        <div class="text-right">
+                            <div
+                                class="font-semibold"
+                                style="color: rgb(102, 187, 106);"
+                            >
+                                {formatPrice(player.price)}
+                            </div>
                         </div>
                     </div>
                 {/each}
