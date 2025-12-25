@@ -180,10 +180,17 @@
         >
             {#each displayPlayers as player (player.id)}
                 {@const isOwned = $collectionIds.includes(player.id)}
+                {@const cardCount = $collectionIds.filter(
+                    (id) => id === player.id,
+                ).length}
 
                 <div class="relative group perspective">
                     {#if isOwned}
-                        <Card {player} onClick={() => sellDuplicate(player)} />
+                        <Card
+                            {player}
+                            count={cardCount}
+                            onClick={() => sellDuplicate(player)}
+                        />
                     {:else}
                         <!-- Empty Slot / Ghost Card -->
                         <div

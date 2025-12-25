@@ -6,10 +6,17 @@
         player: Player;
         isNew?: boolean;
         showPrice?: boolean;
+        count?: number; // Number of copies owned
         onClick?: () => void;
     }
 
-    let { player, isNew = false, showPrice = false, onClick } = $props();
+    let {
+        player,
+        isNew = false,
+        showPrice = false,
+        count = 1,
+        onClick,
+    } = $props();
 
     function getRarity(rating: number): {
         type: string;
@@ -152,6 +159,15 @@
             transition:fade
         >
             NEW!
+        </div>
+    {/if}
+
+    {#if count > 1}
+        <div
+            class="absolute bottom-2 right-2 z-20 bg-gradient-to-br from-amber-400 to-amber-600 text-black text-xs font-black px-2.5 py-1 rounded-full shadow-lg border-2 border-amber-200"
+            transition:fade
+        >
+            x{count}
         </div>
     {/if}
 </button>
