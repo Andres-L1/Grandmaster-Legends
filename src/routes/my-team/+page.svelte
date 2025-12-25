@@ -181,8 +181,9 @@
                                 </div>
                             </div>
 
-                            <div
-                                class="bg-[rgba(255,160,0,0.1)] p-2 rounded cursor-pointer hover:bg-[rgba(255,160,0,0.2)] transition"
+                            <button
+                                type="button"
+                                class="bg-[rgba(255,160,0,0.1)] p-2 rounded cursor-pointer hover:bg-[rgba(255,160,0,0.2)] transition text-left"
                                 onclick={() =>
                                     openClauseModal(
                                         $ownedPlayers.find(
@@ -198,7 +199,7 @@
                                 <div class="text-amber-400 font-medium">
                                     {formatPrice(clause)} ✎
                                 </div>
-                            </div>
+                            </button>
                         </div>
 
                         <div class="flex gap-2">
@@ -317,17 +318,17 @@
 
         <div class="space-y-4">
             <div>
-                <label class="block text-sm text-gray-400 mb-2"
-                    >Nueva Cláusula (M)</label
-                >
-                <input
-                    type="range"
-                    min={selectedPlayer.price}
-                    max={selectedPlayer.price * 5}
-                    step={1000000}
-                    bind:value={newClauseValue}
-                    class="w-full accent-amber-500 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                />
+                <label class="block text-sm text-gray-400 mb-2">
+                    Nueva Cláusula (M)
+                    <input
+                        type="range"
+                        min={selectedPlayer.price}
+                        max={selectedPlayer.price * 5}
+                        step={1000000}
+                        bind:value={newClauseValue}
+                        class="w-full accent-amber-500 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer mt-2"
+                    />
+                </label>
                 <div class="flex justify-between mt-2">
                     <span class="text-amber-400 text-xl font-bold"
                         >{formatPrice(newClauseValue)}</span
