@@ -34,28 +34,25 @@ export const PACKS: Record<PackType, PackConfig> = {
         price: 100,
         cardCount: 3,
         description: '3 Cartas. Ideal para empezar.',
-        // Very low chance for top tiers
-        probabilities: { goat: 0.001, legendary: 0.01, epic: 0.09, rare: 0.30, common: 0.60 },
+        probabilities: { goat: 0.001, legendary: 0.01, epic: 0.08, rare: 0.25, common: 0.659 },
         image: '♟️'
     },
     KNIGHT: {
         id: 'KNIGHT',
         name: 'Sobre Caballo',
         price: 500,
-        cardCount: 5,
-        description: '5 Cartas. Mejores opciones.',
-        // Decent chance for Epic/Legendary
-        probabilities: { goat: 0.01, legendary: 0.05, epic: 0.25, rare: 0.40, common: 0.29 },
+        cardCount: 3,
+        description: '3 Cartas. Mejores opciones.',
+        probabilities: { goat: 0.01, legendary: 0.05, epic: 0.20, rare: 0.40, common: 0.34 },
         image: '♞'
     },
     KING: {
         id: 'KING',
         name: 'Sobre Rey',
         price: 2000,
-        cardCount: 10,
-        description: '10 Cartas. La verdadera élite.',
-        // Guaranteed quality, good shot at GOAT
-        probabilities: { goat: 0.05, legendary: 0.20, epic: 0.40, rare: 0.25, common: 0.10 },
+        cardCount: 3,
+        description: '3 Cartas. La verdadera élite.',
+        probabilities: { goat: 0.05, legendary: 0.15, epic: 0.35, rare: 0.30, common: 0.15 },
         image: '♚'
     }
 };
