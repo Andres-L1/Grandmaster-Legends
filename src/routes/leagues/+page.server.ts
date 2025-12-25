@@ -1,31 +1,19 @@
 import type { PageServerLoad } from './$types';
-import prisma from '$lib/server/services/MarketService';
 
 export const load: PageServerLoad = async ({ url }) => {
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const pageSize = 20;
-    const skip = (page - 1) * pageSize;
-
-    const [users, totalUsers] = await Promise.all([
-        prisma.user.findMany({
-            orderBy: { totalPoints: 'desc' },
-            skip,
-            take: pageSize,
-            select: {
-                id: true,
-                username: true,
-                totalPoints: true
-            }
-        }),
-        prisma.user.count()
-    ]);
-
-    const totalPages = Math.ceil(totalUsers / pageSize);
+    // Mock data for static build - database not available
+    const users = [
+        { id: '1', username: 'ChessMaster', totalPoints: 1500 },
+        { id: '2', username: 'TacticKing', totalPoints: 1200 },
+        { id: '3', username: 'EndgameExpert', totalPoints: 1100 },
+        { id: '4', username: 'Opening_Guru', totalPoints: 950 },
+        { id: '5', username: 'Blitz_Champion', totalPoints: 800 },
+    ];
 
     return {
         users,
-        currentPage: page,
-        totalPages,
-        totalUsers
+        currentPage: 1,
+        totalPages: 1,
+        totalUsers: 5
     };
 };
