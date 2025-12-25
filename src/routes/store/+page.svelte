@@ -1,32 +1,40 @@
 <script lang="ts">
     import { user } from "$lib/stores/user";
-    import { collectionIds } from "$lib/stores/players";
+    import { collectionIds, allPlayers } from "$lib/stores/players";
     import {
         PACKS,
         packService,
         type PackType,
-        type PackConfig,
     } from "$lib/services/packService";
-    import { lichessApi, type Player } from "$lib/services/lichessApi";
+    import type { Player } from "$lib/data/players";
     import { toast } from "$lib/stores/toast";
     import Card from "$lib/components/Card.svelte";
     import confetti from "canvas-confetti";
     import { onMount } from "svelte";
 
     // State
-    let allPlayers: Player[] = [];
     let isOpening = false;
     let openedCards: { card: Player; isNew: boolean }[] = [];
     let showResultModal = false;
+    let isStarter = false;
 
-    onMount(async () => {
-        // Load players for the pack pool
-        try {
-            allPlayers = await lichessApi.getTopPlayers(500);
-        } catch (e) {
-            console.error("Failed to load pool", e);
+    onMount(() => {
+        // Auto-open starter pack if collection is empty
+        if ($collectionIds.length === 0) {
+            triggerStarterPack();
         }
     });
+
+    function triggerStarterPack() {
+        isStarter = true;
+        isOpening = true;
+        // Small delay to let store load
+        setTimeout(() => {
+            const cards = packService.openPack("STARTER", $allPlayers);
+            processOpenedCards(cards);
+            toast.info("¡Bienvenido! Has recibido un Sobre Inicial.");
+        }, 500);
+    }
 
     function buyPack(packType: PackType) {
         if (isOpening) return;
@@ -41,11 +49,12 @@
         // Transaction
         if (user.spendCoins(pack.price)) {
             isOpening = true;
+            isStarter = false;
             toast.success(`¡Compraste un ${pack.name}!`);
 
             // Artificial delay for "opening" feel
             setTimeout(() => {
-                const cards = packService.openPack(packType, allPlayers);
+                const cards = packService.openPack(packType, $allPlayers);
                 processOpenedCards(cards);
             }, 1000); // 1s delay
         }
@@ -57,8 +66,8 @@
             return { card, isNew };
         });
 
-        // Check for legendary to trigger confetti
-        const hasLegendary = cards.some((c) => c.rating >= 2750);
+        // Check for legendary to trigger confetti (New threshold: 2660+)
+        const hasLegendary = cards.some((c) => c.rating >= 2660);
         if (hasLegendary) {
             confetti({
                 particleCount: 150,
@@ -99,48 +108,50 @@
     <!-- Packs Grid -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         {#each Object.values(PACKS) as pack}
-            <button
-                class="group relative flex flex-col items-center p-8 rounded-2xl border border-white/10 bg-gradient-to-b from-slate-800 to-slate-900 transition-all hover:-translate-y-2 hover:shadow-2xl hover:shadow-amber-500/10 hover:border-amber-500/30"
-                onclick={() => buyPack(pack.id)}
-                disabled={isOpening}
-            >
-                <!-- Pack Icon -->
-                <div
-                    class="text-8xl mb-6 transform group-hover:scale-110 transition-transform duration-300 drop-shadow-xl"
+            {#if pack.id !== "STARTER"}
+                <button
+                    class="group relative flex flex-col items-center p-8 rounded-2xl border border-white/10 bg-gradient-to-b from-slate-800 to-slate-900 transition-all hover:-translate-y-2 hover:shadow-2xl hover:shadow-amber-500/10 hover:border-amber-500/30"
+                    onclick={() => buyPack(pack.id)}
+                    disabled={isOpening}
                 >
-                    {pack.image}
-                </div>
-
-                <!-- Info -->
-                <h3 class="text-2xl font-bold font-serif text-white mb-2">
-                    {pack.name}
-                </h3>
-                <p class="text-sm text-slate-400 text-center mb-6 h-12">
-                    {pack.description}
-                </p>
-
-                <!-- Price -->
-                <div
-                    class="mt-auto flex items-center gap-2 bg-slate-950/50 px-6 py-3 rounded-xl border border-white/5 group-hover:bg-amber-500/20 group-hover:border-amber-500/50 transition-colors"
-                >
-                    <span class="text-2xl">🪙</span>
-                    <span
-                        class="text-xl font-bold font-mono text-white group-hover:text-amber-300"
+                    <!-- Pack Icon -->
+                    <div
+                        class="text-8xl mb-6 transform group-hover:scale-110 transition-transform duration-300 drop-shadow-xl"
                     >
-                        {pack.price}
-                    </span>
-                </div>
+                        {pack.image}
+                    </div>
 
-                <!-- Hover Glow -->
-                <div
-                    class="absolute inset-0 bg-amber-500/5 opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity pointer-events-none"
-                ></div>
-            </button>
+                    <!-- Info -->
+                    <h3 class="text-2xl font-bold font-serif text-white mb-2">
+                        {pack.name}
+                    </h3>
+                    <p class="text-sm text-slate-400 text-center mb-6 h-12">
+                        {pack.description}
+                    </p>
+
+                    <!-- Price -->
+                    <div
+                        class="mt-auto flex items-center gap-2 bg-slate-950/50 px-6 py-3 rounded-xl border border-white/5 group-hover:bg-amber-500/20 group-hover:border-amber-500/50 transition-colors"
+                    >
+                        <span class="text-2xl">🪙</span>
+                        <span
+                            class="text-xl font-bold font-mono text-white group-hover:text-amber-300"
+                        >
+                            {pack.price}
+                        </span>
+                    </div>
+
+                    <!-- Hover Glow -->
+                    <div
+                        class="absolute inset-0 bg-amber-500/5 opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity pointer-events-none"
+                    ></div>
+                </button>
+            {/if}
         {/each}
     </div>
 </div>
 
-<!-- Results Modal (Simplified inline for now) -->
+<!-- Results Modal -->
 {#if showResultModal}
     <div
         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md"
@@ -149,18 +160,25 @@
             class="w-full max-w-5xl space-y-8 animate-in fade-in zoom-in duration-300"
         >
             <h2 class="text-3xl font-bold text-white text-center">
-                ¡Contenido del Sobre!
+                {isStarter ? "¡Tu Primer Sobre!" : "¡Contenido del Sobre!"}
             </h2>
 
             <div
                 class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 justify-center"
             >
-                {#each openedCards as { card, isNew }}
+                {#each openedCards as { card, isNew }, i}
                     <div
                         class="animate-in slide-in-from-bottom-10 fade-in duration-500"
                         style="animation-delay: {Math.random() * 200}ms"
                     >
-                        <Card player={card} {isNew} />
+                        <Card player={card} {isNew} onClick={() => {}} />
+                        {#if isStarter && !isNew}
+                            <div
+                                class="text-center mt-2 animate-pulse text-amber-400 font-bold text-sm bg-black/50 rounded px-2"
+                            >
+                                ¡DUPLICADO! (+20 Monedas)
+                            </div>
+                        {/if}
                     </div>
                 {/each}
             </div>
@@ -173,6 +191,17 @@
                     Continuar y Guardar
                 </button>
             </div>
+
+            {#if isStarter}
+                <p
+                    class="text-center text-slate-400 text-sm max-w-lg mx-auto bg-slate-900/80 p-4 rounded-lg border border-white/5"
+                >
+                    <strong>Tutorial:</strong> Has recibido 3 cartas, pero una está
+                    repetida. Las cartas repetidas se convierten automáticamente
+                    en monedas (o pueden venderse) para que puedas comprar más sobres.
+                    ¡Esa es la clave para crecer!
+                </p>
+            {/if}
         </div>
     </div>
 {/if}

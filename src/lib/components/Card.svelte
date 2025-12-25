@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { Player } from "$lib/services/lichessApi";
+    import type { Player } from "$lib/data/players";
     import { fade } from "svelte/transition";
 
     interface Props {
@@ -17,28 +17,29 @@
         border: string;
         bg: string;
     } {
-        if (rating >= 2800)
+        if (rating >= 2700)
             return {
                 type: "GOAT",
                 color: "text-yellow-300",
                 border: "border-yellow-400",
                 bg: "bg-gradient-to-br from-yellow-900 via-amber-600 to-yellow-900",
             };
-        if (rating >= 2750)
+        // Adjusted thresholds for the current 81-100 pool (Top being ~2661)
+        if (rating >= 2660)
             return {
                 type: "LEGENDAY",
                 color: "text-orange-400",
                 border: "border-orange-500",
                 bg: "bg-gradient-to-br from-orange-950 via-orange-900 to-red-950",
             };
-        if (rating >= 2650)
+        if (rating >= 2655)
             return {
                 type: "EPIC",
                 color: "text-purple-400",
                 border: "border-purple-500",
                 bg: "bg-gradient-to-br from-purple-950 via-fuchsia-900 to-slate-900",
             };
-        if (rating >= 2550)
+        if (rating >= 2650)
             return {
                 type: "RARE",
                 color: "text-blue-400",
@@ -60,8 +61,8 @@
     class="relative group w-full aspect-[2/3] rounded-xl border-2 {rarity.border} {rarity.bg} p-2 shadow-2xl transition-transform hover:scale-105 hover:z-10 flex flex-col items-center justify-between overflow-hidden"
     onclick={onClick}
 >
-    <!-- Foil Effect (Only for high rarity) -->
-    {#if player.rating >= 2650}
+    <!-- Card Texture/Effect -->
+    {#if player.rating >= 2660}
         <div
             class="absolute inset-0 opacity-20 bg-[url('/foil-texture.png')] bg-cover mix-blend-overlay pointer-events-none"
         ></div>
@@ -93,27 +94,29 @@
         {/if}
     </div>
 
-    <!-- Player Image -->
+    <!-- Player Image (Line Art Style) -->
     <div
-        class="absolute inset-0 flex items-center justify-center top-6 z-0 pointer-events-none"
+        class="absolute inset-0 flex items-center justify-center top-6 z-0 pointer-events-none overflow-hidden"
     >
+        <!-- We use a CSS filter to simulate the 'outline sketch' look -->
         <img
             src={player.photoUrl ||
-                `https://ui-avatars.com/api/?name=${player.name}&background=random`}
+                `https://ui-avatars.com/api/?name=${player.name}&background=random&size=200`}
             alt={player.name}
-            class="w-[85%] h-[85%] object-cover object-top mask-gradient drop-shadow-2xl grayscale-[30%] group-hover:grayscale-0 transition-all duration-500"
-            style="mask-image: linear-gradient(to bottom, black 70%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);"
+            class="w-[90%] h-[90%] object-cover object-top transition-all duration-500 filter grayscale contrast-[1.5] brightness-125 group-hover:scale-110"
+            style="mask-image: linear-gradient(to bottom, black 80%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%); mix-blend-mode: luminosity;"
         />
+        <!-- Outline effect overlay (optional trick: duplicate image with slight offset or border detection filter in CSS is hard, sticking to high contrast B&W) -->
     </div>
 
     <!-- Footer: Name & Username -->
     <div
-        class="z-10 w-full text-center relative mt-auto bg-black/60 backdrop-blur-md rounded-lg p-2 border-t border-white/5"
+        class="z-10 w-full text-center relative mt-auto bg-black/80 backdrop-blur-md rounded-lg p-2 border-t border-white/5 shadow-black/50 shadow-lg"
     >
         <h3
-            class="font-serif font-bold text-white leading-tight truncate px-1 text-sm md:text-base"
+            class="font-serif font-bold text-white leading-tight truncate px-1 text-sm md:text-base tracking-wide"
         >
-            {player.name.replace("GM ", "").replace("IM ", "")}
+            {player.name}
         </h3>
         <p
             class="text-[10px] text-slate-400 truncate uppercase tracking-wider mt-0.5"
