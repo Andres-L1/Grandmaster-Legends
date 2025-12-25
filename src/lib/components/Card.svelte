@@ -21,13 +21,21 @@
         flipOnReveal = false,
     } = $props();
 
-    let isFlipped = $state(false);
     let showGlow = $state(false);
 
-    // Initialize flip state
+    // Cards in collection show face-up (isFlipped=true)
+    // Cards in pack opening start face-down (isFlipped=false) then flip
+    let isFlipped = $state(true); // Default: show card face
+
+    // Override for pack opening animation
     $effect(() => {
         if (flipOnReveal) {
-            isFlipped = true;
+            // Start face-down
+            isFlipped = false;
+            // Then flip to reveal after a moment
+            setTimeout(() => {
+                isFlipped = true;
+            }, 100);
         }
     });
 
