@@ -99,7 +99,6 @@
     }
 </script>
 
-```
 <svelte:head>
     <title>Colección - Grandmaster Legends</title>
 </svelte:head>
